@@ -79,3 +79,44 @@ export interface SkillGroup {
   angles: Angle[];
   items: Skill[];
 }
+
+/* --- Singletons: site config, angle pages, UI dictionary --- */
+
+export interface SocialLink {
+  label: string;
+  href: string;
+}
+
+export interface LanguageProficiency {
+  language: Localized;
+  level: Localized;
+}
+
+export interface SiteConfig {
+  /** Proper noun — not localized. */
+  name: string;
+  role: Localized;
+  location: Localized;
+  email: string;
+  socials: SocialLink[];
+  /** The load-bearing claim on the home page. */
+  thesis: Localized;
+  /** Short, frequently-updated "what I'm building now". */
+  now: Localized;
+  languages: LanguageProficiency[];
+}
+
+export interface AnglePage {
+  label: Localized;
+  /** Positioning statement at the top of the angle page. */
+  positioning: Localized;
+  /** One-sentence framing used on the home angle cards. */
+  teaser: Localized;
+}
+
+/**
+ * Nested UI-string dictionary. Typing content against this with `satisfies`
+ * forces every leaf to provide all locales, so a missing translation is a
+ * build error rather than a silent fallback.
+ */
+export type Dictionary = { [key: string]: Localized | Dictionary };
