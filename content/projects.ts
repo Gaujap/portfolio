@@ -11,7 +11,7 @@ import type { Project } from "@/content/types";
  *
  * Dates and a few specifics are marked `// TODO: verify` — audit before launch.
  */
-export const projects = [
+export const projects: Project[] = [
   {
     slug: "hermes",
     name: "Hermes",
@@ -270,7 +270,7 @@ export const projects = [
     hasWriteup: true,
     featured: false,
   },
-] satisfies Project[];
+];
 
 /** Slugs in display order — the manifest that drives /work/[slug] routing. */
 export const PROJECT_SLUGS = projects.map((project) => project.slug);

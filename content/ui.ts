@@ -32,6 +32,13 @@ export const ui = {
     languages: { en: "Languages", fr: "Langues" },
     angles: { en: "Three angles", fr: "Trois angles" },
     projects: { en: "Projects", fr: "Projets" },
+    architecture: { en: "Architecture", fr: "Architecture" },
+  },
+  diagrams: {
+    hermes: {
+      en: "Hermes voice pipeline: wake word to speech-to-text to LLM to Piper text-to-speech, with a local Qwen model and a Claude Haiku cloud fallback.",
+      fr: "Pipeline vocal Hermes : mot d'activation vers reconnaissance vocale vers LLM vers synthèse vocale Piper, avec un modèle Qwen en local et un repli cloud Claude Haiku.",
+    },
   },
   labels: {
     private: { en: "Private", fr: "Privé" },
