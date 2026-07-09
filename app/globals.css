@@ -88,3 +88,25 @@
     border-radius: 2px;
   }
 }
+
+/*
+ * Scroll-reveal. Content is visible by default; it is only hidden (to be
+ * revealed on entry) when JS is available AND motion is allowed. So no-JS users
+ * and reduced-motion users always see content immediately — the animation is a
+ * pure enhancement. The `data-revealed` attribute is set once by the Reveal
+ * component's IntersectionObserver.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  html.js .reveal {
+    opacity: 0;
+    transform: translateY(10px);
+    transition:
+      opacity 400ms ease-out,
+      transform 400ms ease-out;
+  }
+
+  html.js .reveal[data-revealed="true"] {
+    opacity: 1;
+    transform: none;
+  }
+}
