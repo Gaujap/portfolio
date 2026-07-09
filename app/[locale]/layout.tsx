@@ -6,6 +6,7 @@ import { LOCALES, isLocale, t } from "@/lib/i18n";
 import { SkipLink } from "@/components/chrome/skip-link";
 import { Header } from "@/components/chrome/header";
 import { Footer } from "@/components/chrome/footer";
+import { ThemeManager } from "@/components/chrome/theme-manager";
 import { ui } from "@/content/ui";
 
 // The locale set is closed: only /en and /fr are prerendered, anything else 404s.
@@ -30,12 +31,17 @@ export default async function LocaleLayout({
   if (!isLocale(locale)) notFound();
 
   return (
-    <html lang={locale} className={fontVariables} suppressHydrationWarning>
+    // Font classes go on <body>, not <html>: the boot script + theme toggle
+    // mutate <html>'s class imperatively, so React must not also own it (it
+    // would reset .dark on locale navigation). ThemeManager re-applies the
+    // theme on every route change as a second guard.
+    <html lang={locale} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: bootScript }} />
       </head>
-      <body>
+      <body className={fontVariables}>
         <LocaleProvider locale={locale}>
+          <ThemeManager />
           <SkipLink label={t(ui.actions.skipToContent, locale)} />
           <Header locale={locale} />
           <main id="main">{children}</main>
