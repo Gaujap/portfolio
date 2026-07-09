@@ -2,7 +2,11 @@ import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
 import { fontVariables } from "@/lib/fonts";
 import { LocaleProvider } from "@/lib/locale-context";
-import { LOCALES, isLocale } from "@/lib/i18n";
+import { LOCALES, isLocale, t } from "@/lib/i18n";
+import { SkipLink } from "@/components/chrome/skip-link";
+import { Header } from "@/components/chrome/header";
+import { Footer } from "@/components/chrome/footer";
+import { ui } from "@/content/ui";
 
 // The locale set is closed: only /en and /fr are prerendered, anything else 404s.
 export function generateStaticParams() {
@@ -11,8 +15,9 @@ export function generateStaticParams() {
 
 export const dynamicParams = false;
 
-// Applies the persisted (or system) theme before first paint — no flash.
-const noFlashTheme = `(function(){try{var s=localStorage.getItem('theme');var d=s?s==='dark':window.matchMedia('(prefers-color-scheme: dark)').matches;if(d)document.documentElement.classList.add('dark');}catch(e){}})();`;
+// Runs before first paint: marks JS as available (so scroll-reveal can hide its
+// initial state) and applies the persisted/system theme — avoiding any flash.
+const bootScript = `(function(){var e=document.documentElement;e.classList.add('js');try{var s=localStorage.getItem('theme');var d=s?s==='dark':window.matchMedia('(prefers-color-scheme: dark)').matches;if(d)e.classList.add('dark');}catch(_){}})();`;
 
 export default async function LocaleLayout({
   children,
@@ -27,10 +32,15 @@ export default async function LocaleLayout({
   return (
     <html lang={locale} className={fontVariables} suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: noFlashTheme }} />
+        <script dangerouslySetInnerHTML={{ __html: bootScript }} />
       </head>
       <body>
-        <LocaleProvider locale={locale}>{children}</LocaleProvider>
+        <LocaleProvider locale={locale}>
+          <SkipLink label={t(ui.actions.skipToContent, locale)} />
+          <Header locale={locale} />
+          <main id="main">{children}</main>
+          <Footer locale={locale} />
+        </LocaleProvider>
       </body>
     </html>
   );

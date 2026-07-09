@@ -1,44 +1,34 @@
-import Link from "next/link";
-import { t, type Locale, type Localized } from "@/lib/i18n";
+import { Container, Section, Reveal, Eyebrow, Heading } from "@/components/ui";
+import { t, type Locale } from "@/lib/i18n";
+import { site } from "@/content/site";
 
 /*
- * Placeholder home that proves the locale plumbing end-to-end (routing,
- * `params` → `t()`, and switching). The real editorial home is built in the
- * pages step; the temporary locale links here are replaced by the header.
+ * Placeholder home. It now renders inside the layout's <main>, header, and
+ * footer, and exercises the primitives so the chrome can be verified. The real
+ * editorial home replaces this in the pages step.
  */
-
-const thesis: Localized = {
-  en: "I build AI systems that run in production, not in slide decks.",
-  fr: "Je conçois des systèmes d'IA qui tournent en production, pas dans des slides.",
-};
-
-const other: Record<Locale, { href: string; label: string }> = {
-  en: { href: "/fr", label: "Français" },
-  fr: { href: "/en", label: "English" },
-};
-
 export default async function Home({
   params,
 }: {
   params: Promise<{ locale: Locale }>;
 }) {
   const { locale } = await params;
-  const switchTo = other[locale];
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-24">
-      <p className="font-mono text-xs uppercase tracking-widest text-accent">
-        {locale.toUpperCase()} · placeholder
-      </p>
-      <h1 className="mt-8 font-display text-5xl leading-[1.05] tracking-tight sm:text-6xl">
-        {t(thesis, locale)}
-      </h1>
-      <Link
-        href={switchTo.href}
-        className="mt-10 inline-block font-mono text-sm text-muted underline underline-offset-4 hover:text-accent"
-      >
-        → {switchTo.label}
-      </Link>
-    </main>
+    <Container>
+      <Section>
+        <Eyebrow accent>{locale.toUpperCase()} · placeholder</Eyebrow>
+        <Heading level={1} className="mt-8">
+          {t(site.thesis, locale)}
+        </Heading>
+      </Section>
+      <Reveal>
+        <Section className="border-t border-line">
+          <p className="max-w-[62ch] leading-relaxed text-muted">
+            {t(site.now, locale)}
+          </p>
+        </Section>
+      </Reveal>
+    </Container>
   );
 }
