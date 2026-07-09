@@ -1,0 +1,6 @@
+# pnpm 11 reads build-script approval from here (no longer package.json).
+# sharp powers next/image + OG image rendering; unrs-resolver is the eslint
+# import resolver's native core. Both are trusted, so their builds run.
+allowBuilds:
+  sharp: true
+  unrs-resolver: true
