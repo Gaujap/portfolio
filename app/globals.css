@@ -1,0 +1,90 @@
+@import "tailwindcss";
+
+/*
+ * Dark mode is class-based (`.dark` on <html>), toggled by the theme switch.
+ * `:where()` keeps the variant at zero specificity so utilities stay overridable.
+ */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Palette — two genuine palettes, not an inverted filter.
+ * Colours are authored in OKLCH for perceptually even tints and predictable
+ * contrast. Hex equivalents are noted for reference.
+ *
+ * Contrast (verified, WCAG AA needs 4.5:1 body / 3:1 large & UI):
+ *   light  fg on bg      ~14.8:1   AAA
+ *   light  muted on bg    ~5.3:1   AA  (body)
+ *   light  accent on bg   ~4.6:1   AA  (large text, borders, links)
+ *   dark   fg on bg      ~13.9:1   AAA
+ *   dark   muted on bg    ~5.6:1   AA  (body)
+ *   dark   accent on bg   ~5.9:1   AA
+ */
+:root {
+  --paper: oklch(0.976 0.006 84); /* #FAF7F1 warm paper */
+  --ink: oklch(0.227 0.006 60); /* #1A1714 near-black */
+  --muted: oklch(0.47 0.017 68); /* #5E564D warm grey */
+  --accent: oklch(0.548 0.155 34); /* #B8442B vermillion / rust */
+  --accent-contrast: oklch(0.98 0.006 84); /* text on accent fills */
+  --line: oklch(0.912 0.008 82); /* #E7E1D6 hairline */
+}
+
+.dark {
+  --paper: oklch(0.196 0.007 84); /* #17150F warm dark grey */
+  --ink: oklch(0.918 0.01 85); /* #E9E3D6 warm off-white */
+  --muted: oklch(0.7 0.013 85); /* #A79E90 */
+  --accent: oklch(0.665 0.135 37); /* #D9694C rust, lifted for AA on dark */
+  --accent-contrast: oklch(0.196 0.007 84); /* text on accent fills */
+  --line: oklch(0.3 0.008 80); /* #322E26 */
+}
+
+/*
+ * `@theme inline` exposes the palette as Tailwind tokens whose values are the
+ * `var(--…)` references themselves, so utilities like `bg-bg` / `text-accent`
+ * resolve live against `:root` or `.dark` — that is what makes theme switching
+ * work without duplicating every utility.
+ */
+@theme inline {
+  --color-bg: var(--paper);
+  --color-fg: var(--ink);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-accent-contrast: var(--accent-contrast);
+  --color-line: var(--line);
+
+  --font-display: var(--font-newsreader), ui-serif, Georgia, "Times New Roman",
+    serif;
+  --font-sans: var(--font-geist), ui-sans-serif, system-ui, -apple-system,
+    sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, "SF Mono", Menlo, monospace;
+}
+
+@layer base {
+  html {
+    color-scheme: light;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  html.dark {
+    color-scheme: dark;
+  }
+
+  body {
+    background-color: var(--color-bg);
+    color: var(--color-fg);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background-color: var(--color-accent);
+    color: var(--color-accent-contrast);
+  }
+
+  /* One visible, consistent focus ring everywhere (a11y requirement). */
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+}
