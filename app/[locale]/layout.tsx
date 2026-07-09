@@ -30,11 +30,14 @@ export default async function LocaleLayout({
   if (!isLocale(locale)) notFound();
 
   return (
-    <html lang={locale} className={fontVariables} suppressHydrationWarning>
+    // Font variables live on <body>, not <html>: the boot script and theme
+    // toggle mutate <html>'s class imperatively, and if React also controlled
+    // that class it would reset it (dropping `.dark`) on locale navigation.
+    <html lang={locale} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: bootScript }} />
       </head>
-      <body>
+      <body className={fontVariables}>
         <LocaleProvider locale={locale}>
           <SkipLink label={t(ui.actions.skipToContent, locale)} />
           <Header locale={locale} />
