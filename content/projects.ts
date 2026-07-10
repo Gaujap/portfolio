@@ -39,6 +39,36 @@ export const projects: Project[] = [
       "openWakeWord",
       "systemd",
     ],
+    facts: [
+      {
+        label: { en: "~63 tok/s local", fr: "~63 tok/s en local" }, // TODO: verify
+        detail: {
+          en: "Qwen 2.5 14B on an RX 7900 XTX via ROCm — Claude Haiku only as fallback.",
+          fr: "Qwen 2.5 14B sur RX 7900 XTX via ROCm — Claude Haiku seulement en repli.",
+        },
+      },
+      {
+        label: { en: "Hands-free voice", fr: "Voix mains-libres" },
+        detail: {
+          en: "openWakeWord → faster-whisper (FR) → LLM → Piper TTS, as systemd services.",
+          fr: "openWakeWord → faster-whisper (FR) → LLM → Piper TTS, en services systemd.",
+        },
+      },
+      {
+        label: { en: "NFC automation", fr: "Automatisation NFC" },
+        detail: {
+          en: "A /trigger endpoint with an intent table separating direct from contextual intents.",
+          fr: "Un endpoint /trigger et une table d'intentions séparant direct et contextuel.",
+        },
+      },
+      {
+        label: { en: "The 95% rule", fr: "La règle des 95 %" },
+        detail: {
+          en: "Three or four workflows at 95% reliability before any fifth exists.",
+          fr: "Trois ou quatre workflows à 95 % de fiabilité avant d'en ajouter un cinquième.",
+        },
+      },
+    ],
     primaryAngle: "ai",
     angles: {
       ai: {
@@ -91,6 +121,36 @@ export const projects: Project[] = [
       "Prisma",
       "Stripe Connect",
       "Cloudflare R2",
+    ],
+    facts: [
+      {
+        label: { en: "Real money moves", fr: "De l'argent réel circule" },
+        detail: {
+          en: "Stripe Connect Express handles creator payouts — payments-grade from day one.",
+          fr: "Stripe Connect Express gère les paiements créateurs — niveau paiement dès le départ.",
+        },
+      },
+      {
+        label: { en: "Realtime backbone", fr: "Colonne temps réel" },
+        detail: {
+          en: "Fastify + WebSockets over Supabase Postgres with Prisma.",
+          fr: "Fastify + WebSockets sur Postgres Supabase avec Prisma.",
+        },
+      },
+      {
+        label: { en: "Three people", fr: "Trois personnes" },
+        detail: {
+          en: "Whole platform built by a three-person team — architecture chosen to stay maintainable.",
+          fr: "Toute la plateforme construite à trois — architecture pensée pour rester maintenable.",
+        },
+      },
+      {
+        label: { en: "Security before launch", fr: "Sécurité avant lancement" },
+        detail: {
+          en: "Threat modelling on the payment and media paths before any public user exists.",
+          fr: "Modélisation des menaces sur paiement et médias avant le premier utilisateur public.",
+        },
+      },
     ],
     primaryAngle: "engineering",
     angles: {
@@ -146,6 +206,36 @@ export const projects: Project[] = [
       fr: "Claude Code intégré à Notion et au serveur MCP GitHub, avec une suite de commandes sur mesure pour la prise en charge des tâches, l'implémentation, la vérification des effets de bord et la synchronisation des statuts. Le point intéressant : un motif de table-file — une contrainte de schéma délibérée qui a éliminé une classe d'échecs d'agent sur le filtrage de propriétés.",
     },
     stack: ["Claude Code", "Notion API", "GitHub MCP", "MCP"],
+    facts: [
+      {
+        label: { en: "6 active projects", fr: "6 projets actifs" },
+        detail: {
+          en: "One pipeline runs task intake, implementation and status sync across all of them.",
+          fr: "Un seul pipeline gère prise en charge, implémentation et synchro de statut partout.",
+        },
+      },
+      {
+        label: { en: "Queue-table pattern", fr: "Motif table-file" },
+        detail: {
+          en: "A deliberate schema constraint that eliminated a class of agent filtering failures.",
+          fr: "Une contrainte de schéma délibérée qui a éliminé une classe d'échecs de filtrage.",
+        },
+      },
+      {
+        label: { en: "Ripple-effect checks", fr: "Vérification d'effets de bord" },
+        detail: {
+          en: "Every change is checked for knock-on effects before the status ever flips.",
+          fr: "Chaque changement est vérifié pour ses effets en cascade avant tout changement de statut.",
+        },
+      },
+      {
+        label: { en: "Custom command suite", fr: "Suite de commandes sur mesure" },
+        detail: {
+          en: "Claude Code wired to Notion and the GitHub MCP server, end to end.",
+          fr: "Claude Code branché à Notion et au serveur MCP GitHub, de bout en bout.",
+        },
+      },
+    ],
     primaryAngle: "ai",
     angles: {
       ai: {
@@ -201,6 +291,36 @@ export const projects: Project[] = [
       "Elasticsearch",
       "KVM",
     ],
+    facts: [
+      {
+        label: { en: "Two sites, one VPN", fr: "Deux sites, un VPN" },
+        detail: {
+          en: "Site-to-site VPN between two pfSense edges carries all inter-site traffic.",
+          fr: "Un VPN site-à-site entre deux pfSense transporte tout le trafic inter-sites.",
+        },
+      },
+      {
+        label: { en: "DMZ + bastion", fr: "DMZ + bastion" },
+        detail: {
+          en: "Segmentation and a bastion host enforce a hard trust boundary.",
+          fr: "Segmentation et hôte bastion imposent une frontière de confiance stricte.",
+        },
+      },
+      {
+        label: { en: "Nested KVM lab", fr: "Lab KVM imbriqué" },
+        detail: {
+          en: "The whole topology prototyped virtually — no physical second site needed.",
+          fr: "Toute la topologie prototypée en virtuel — aucun second site physique requis.",
+        },
+      },
+      {
+        label: { en: "Documented & observable", fr: "Documenté & observable" },
+        detail: {
+          en: "NetBox as source of truth, Elasticsearch for the logs.",
+          fr: "NetBox comme source de vérité, Elasticsearch pour les logs.",
+        },
+      },
+    ],
     primaryAngle: "security",
     angles: {
       security: {
@@ -247,6 +367,36 @@ export const projects: Project[] = [
       fr: "Migration d'une plateforme de planification Django legacy vers Vue 3 / Quasar tout en concevant l'API sous-jacente — pour une trentaine d'écoles de ski et de théâtre. La contrainte qui façonne tout : le système legacy reste en production pendant toute la migration.",
     },
     stack: ["Vue 3", "Quasar", "Django", "REST API", "PostgreSQL"],
+    facts: [
+      {
+        label: { en: "~30 schools live", fr: "~30 écoles en production" }, // TODO: verify
+        detail: {
+          en: "Ski and theatre schools keep planning daily while the migration happens under them.",
+          fr: "Les écoles de ski et de théâtre planifient chaque jour pendant la migration.",
+        },
+      },
+      {
+        label: { en: "Zero downtime", fr: "Zéro interruption" },
+        detail: {
+          en: "The legacy Django system stays live throughout — the constraint that shapes everything.",
+          fr: "Le legacy Django reste en production tout du long — la contrainte qui façonne tout.",
+        },
+      },
+      {
+        label: { en: "Strangler-fig migration", fr: "Migration strangler-fig" },
+        detail: {
+          en: "Vue 3 / Quasar replaces the legacy screen by screen, cutover by cutover.",
+          fr: "Vue 3 / Quasar remplace le legacy écran par écran, bascule par bascule.",
+        },
+      },
+      {
+        label: { en: "New API design", fr: "Nouvelle API" },
+        detail: {
+          en: "The backing API is redesigned alongside, not ported as-is.",
+          fr: "L'API sous-jacente est repensée en parallèle, pas portée telle quelle.",
+        },
+      },
+    ],
     primaryAngle: "engineering",
     angles: {
       engineering: {
