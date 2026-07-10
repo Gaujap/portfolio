@@ -207,9 +207,12 @@ html:not(.dark) body::after {
   position: fixed;
   left: 0;
   top: 0;
-  width: 17px;
-  height: 17px;
-  border: 1.5px solid color-mix(in oklab, var(--accent) 45%, var(--muted));
+  width: 18px;
+  height: 18px;
+  border: 1.5px solid color-mix(in oklab, var(--accent) 80%, var(--fg));
+  box-shadow:
+    0 0 9px color-mix(in oklab, var(--accent) 45%, transparent),
+    inset 0 0 5px color-mix(in oklab, var(--accent) 35%, transparent);
   clip-path: polygon(30% 0, 80% 10%, 100% 55%, 70% 100%, 20% 90%, 0 40%);
   opacity: 0;
   transition: opacity 300ms ease;
@@ -228,9 +231,10 @@ html:not(.dark) body::after {
   position: fixed;
   left: 0;
   top: 0;
-  width: 7px;
-  height: 7px;
+  width: 8px;
+  height: 8px;
   border: 1px solid var(--accent);
+  box-shadow: 0 0 7px color-mix(in oklab, var(--accent) 60%, transparent);
   clip-path: polygon(50% 0, 100% 100%, 0 80%);
   opacity: 0;
 }

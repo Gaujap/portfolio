@@ -29,6 +29,10 @@ const ADMIRE_MS = 450;
 /** Debris drifts off in its own directions and fades over a few seconds. */
 const FRAG_LIFE_MIN_MS = 2200;
 const FRAG_LIFE_MAX_MS = 3400;
+/** Free-roaming cruise: slow, constant, unhurried. Duty transit stays brisk. */
+const WANDER_SPEED = 75; // px/s
+const WAYPOINT_MIN_MS = 6000;
+const WAYPOINT_MAX_MS = 12000;
 
 const MAX_ROCKS = 8;
 const MAX_FRAGS = 24;
@@ -95,6 +99,12 @@ export function ShipGuide() {
   const nextShowerDropAt = useRef(0);
   const aimUntil = useRef(0);
   const admireUntil = useRef(0);
+  // Free-roaming cruise state: a virtual position gliding between waypoints
+  // anywhere on screen. Re-seeded from wherever the ship currently is, so
+  // returning to its life never snaps it anywhere.
+  const cruise = useRef<{ x: number; y: number } | null>(null);
+  const waypoint = useRef({ x: 0, y: 0 });
+  const waypointUntil = useRef(0);
   const seed = useRef(1);
 
   useEffect(() => {
@@ -302,11 +312,36 @@ export function ShipGuide() {
     }
 
     if (mode.current === "free" && !prey && !admiring) {
-      // Lazy patrol.
-      const cx = window.innerWidth * 0.82;
-      const cy = window.innerHeight * 0.72;
-      x.set(cx + Math.sin(time * 0.00042) * 90);
-      y.set(cy + Math.sin(time * 0.00061 + 1.4) * 55);
+      // Free roaming: pick a waypoint anywhere on screen and cruise there at
+      // a constant, unhurried pace — then pick another. It starts from
+      // wherever it happens to be, so nothing ever snaps.
+      if (!cruise.current) {
+        cruise.current = { x: x.get(), y: y.get() };
+        waypointUntil.current = 0;
+      }
+      const here = cruise.current;
+      const reached =
+        Math.hypot(waypoint.current.x - here.x, waypoint.current.y - here.y) < 28;
+      if (reached || time >= waypointUntil.current) {
+        waypoint.current = {
+          x: window.innerWidth * (0.08 + rand() * 0.84),
+          y: window.innerHeight * (0.12 + rand() * 0.76),
+        };
+        waypointUntil.current =
+          time + WAYPOINT_MIN_MS + rand() * (WAYPOINT_MAX_MS - WAYPOINT_MIN_MS);
+      }
+      const dx = waypoint.current.x - here.x;
+      const dy = waypoint.current.y - here.y;
+      const dist = Math.hypot(dx, dy) || 1;
+      const step = Math.min(dist, (WANDER_SPEED * delta) / 1000);
+      here.x += (dx / dist) * step;
+      here.y += (dy / dist) * step;
+      // A light sway on top of the cruise keeps it alive.
+      x.set(here.x + Math.sin(time * 0.0006) * 10);
+      y.set(here.y + Math.sin(time * 0.00084 + 2) * 8);
+    } else {
+      // Duty, hunt or admiration: the next free moment re-seeds the cruise.
+      cruise.current = null;
     }
 
     // Render rocks and debris through their pools.
@@ -346,13 +381,20 @@ export function ShipGuide() {
     const vy = y.getVelocity();
     const speed = Math.hypot(vx, vy);
     let heading: number | null = null;
+    let turnRate = 0.1;
     if (prey) {
       heading =
         (Math.atan2(prey.y - y.get(), prey.x - x.get()) * 180) / Math.PI;
-    } else if (mode.current === "free" && !admiring) {
-      const dx = Math.cos(time * 0.00042) * 90 * 0.00042;
-      const dy = Math.cos(time * 0.00061 + 1.4) * 55 * 0.00061;
-      heading = (Math.atan2(dy, dx) * 180) / Math.PI;
+    } else if (mode.current === "free" && !admiring && cruise.current) {
+      // Nose toward the waypoint it's cruising to — lazy turns.
+      heading =
+        (Math.atan2(
+          waypoint.current.y - cruise.current.y,
+          waypoint.current.x - cruise.current.x,
+        ) *
+          180) /
+        Math.PI;
+      turnRate = 0.05;
     } else if (!scrolling && speed > 200) {
       heading = (Math.atan2(vy, vx) * 180) / Math.PI;
     } else if (!scrolling && mode.current === "present") {
@@ -361,7 +403,7 @@ export function ShipGuide() {
     if (heading !== null) {
       const current = ((rotate.get() % 360) + 540) % 360 - 180;
       const d = ((heading - current + 540) % 360) - 180;
-      rotate.set(current + d * 0.1);
+      rotate.set(current + d * turnRate);
     }
 
     if (flame.current) {
