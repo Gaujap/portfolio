@@ -53,8 +53,6 @@ export interface Project {
   isPrivate: boolean;
   /** Has a long-form MDX write-up at /work/[slug]. */
   hasWriteup: boolean;
-  /** Surfaced in the home page "selected work". */
-  featured: boolean;
 }
 
 export interface Experience {
