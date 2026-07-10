@@ -11,6 +11,7 @@ import {
 } from "framer-motion";
 import { cn } from "@/lib/cn";
 import { scrollState } from "@/lib/scroll-state";
+import { ship } from "@/lib/ship";
 import { scrollToY } from "@/components/immersive/smooth-scroll";
 import { Container, Tag, TextLink } from "@/components/ui";
 
@@ -55,9 +56,12 @@ export function ProjectConsole({
   projects: ConsoleProject[];
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const markerRefs = useRef<Array<HTMLButtonElement | null>>([]);
+  const ctaRef = useRef<HTMLDivElement>(null);
   const reducedMotion = useReducedMotion();
   const [active, setActive] = useState(0);
   const [openFact, setOpenFact] = useState<number | null>(null);
+  const [onStage, setOnStage] = useState(false);
 
   const count = projects.length;
 
@@ -80,10 +84,46 @@ export function ProjectConsole({
   const presence = useTransform(viewProgress, [0, 0.12, 0.88, 1], [0, 1, 1, 0]);
   useMotionValueEvent(presence, "change", (value) => {
     scrollState.projectsPresence = value;
+    const staged = value > 0.25;
+    setOnStage((current) => (current === staged ? current : staged));
   });
 
-  // Changing project closes any open callout.
-  useEffect(() => setOpenFact(null), [active]);
+  // Changing project closes any open callout and gives the ship back the helm.
+  useEffect(() => {
+    setOpenFact(null);
+    ship.setUserBusy(false);
+  }, [active]);
+
+  // Publish this project's tour to the ship guide: the hotspots in order,
+  // then the parking spot beside the CTA. Live rects, so scrolling is safe.
+  const project = projects[active];
+  useEffect(() => {
+    if (reducedMotion || !onStage) {
+      ship.retract("console");
+      return;
+    }
+    ship.publish(
+      "console",
+      [
+        ...project.facts.slice(0, 4).map((_, i) => ({
+          id: `${project.slug}-${i}`,
+          order: i,
+          getRect: () => markerRefs.current[i]?.getBoundingClientRect() ?? null,
+          focus: () => setOpenFact(i),
+          blur: () =>
+            setOpenFact((current) => (current === i ? null : current)),
+        })),
+        {
+          id: `${project.slug}-cta`,
+          order: 99,
+          park: true,
+          getRect: () => ctaRef.current?.getBoundingClientRect() ?? null,
+        },
+      ],
+      10,
+    );
+    return () => ship.retract("console");
+  }, [project, onStage, reducedMotion]);
 
   function jumpTo(index: number) {
     const container = containerRef.current;
@@ -127,8 +167,6 @@ export function ProjectConsole({
       </section>
     );
   }
-
-  const project = projects[active];
 
   return (
     <div
@@ -203,6 +241,7 @@ export function ProjectConsole({
                       key={fact.label}
                       type="button"
                       aria-expanded={openFact === i}
+                      aria-controls={`fact-chip-${project.slug}-${i}`}
                       onClick={() => setOpenFact(openFact === i ? null : i)}
                       className={cn(
                         "rounded-full border px-3 py-1 font-mono text-xs transition-colors",
@@ -219,6 +258,7 @@ export function ProjectConsole({
                   {openFact !== null && project.facts[openFact] && (
                     <motion.p
                       key={openFact}
+                      id={`fact-chip-${project.slug}-${openFact}`}
                       initial={{ opacity: 0, y: 6 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0 }}
@@ -231,7 +271,8 @@ export function ProjectConsole({
                 </AnimatePresence>
               </div>
 
-              <div className="mt-8">
+              {/* The ship parks beside this button at the end of its tour. */}
+              <div ref={ctaRef} className="mt-8 inline-block">
                 <TextLink
                   href={project.href}
                   className="font-mono text-sm uppercase tracking-widest"
@@ -251,11 +292,22 @@ export function ProjectConsole({
                 style={MARKER_POSITIONS[i]}
               >
                 <button
+                  ref={(el) => {
+                    markerRefs.current[i] = el;
+                  }}
                   type="button"
                   aria-expanded={openFact === i}
                   onClick={() => setOpenFact(openFact === i ? null : i)}
-                  onMouseEnter={() => setOpenFact(i)}
-                  onFocus={() => setOpenFact(i)}
+                  onMouseEnter={() => {
+                    // Manual exploration takes priority: the ship yields.
+                    ship.setUserBusy(true);
+                    setOpenFact(i);
+                  }}
+                  onFocus={() => {
+                    ship.setUserBusy(true);
+                    setOpenFact(i);
+                  }}
+                  aria-controls={`fact-${project.slug}-${i}`}
                   className="group flex items-center gap-2"
                 >
                   <span className="relative flex h-3 w-3">
@@ -265,6 +317,16 @@ export function ProjectConsole({
                         openFact === i && "animate-none",
                       )}
                     />
+                    {/* Docking pulse — one expanding ring each time it opens. */}
+                    {openFact === i && (
+                      <motion.span
+                        key={`pulse-${project.slug}-${i}`}
+                        initial={{ scale: 0.6, opacity: 0.8 }}
+                        animate={{ scale: 2.6, opacity: 0 }}
+                        transition={{ duration: 0.7, ease: "easeOut" }}
+                        className="absolute inset-0 rounded-full border border-accent"
+                      />
+                    )}
                     <span className="relative inline-flex h-3 w-3 rounded-full border border-accent bg-bg" />
                   </span>
                   <span
@@ -284,6 +346,7 @@ export function ProjectConsole({
                 <AnimatePresence>
                   {openFact === i && (
                     <motion.div
+                      id={`fact-${project.slug}-${i}`}
                       initial={{ opacity: 0, y: 8 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0 }}

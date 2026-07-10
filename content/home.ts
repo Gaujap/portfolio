@@ -28,18 +28,19 @@ export const home: {
     en: "I build [[AI systems]] that run in [[production]], not in slide decks.",
     fr: "Je conçois des [[systèmes d'IA]] qui tournent en [[production]], pas dans des slides.",
   },
+  // `[[label->path]]` doors link into the site (locale prefix added at render).
   manifesto: [
     {
       en: "Most AI work never leaves the [[demo]].",
       fr: "La plupart des projets d'IA ne quittent jamais la [[démo]].",
     },
     {
-      en: "Mine ships — a [[voice assistant]] answering on my own hardware, a [[payments-grade]] platform built by three people, a [[live migration]] no school ever noticed.",
-      fr: "Les miens sont livrés — un [[assistant vocal]] qui répond sur mon propre matériel, une plateforme [[prête pour les paiements]] construite à trois, une [[migration en production]] qu'aucune école n'a remarquée.",
+      en: "Mine ships — a [[voice assistant->work/hermes]] answering on my own hardware, a [[payments-grade->work/vybe]] platform built by three people, a [[live migration->work/ski-theatre-scheduling]] no school ever noticed.",
+      fr: "Les miens sont livrés — un [[assistant vocal->work/hermes]] qui répond sur mon propre matériel, une plateforme [[prête pour les paiements->work/vybe]] construite à trois, une [[migration en production->work/ski-theatre-scheduling]] qu'aucune école n'a remarquée.",
     },
     {
-      en: "One identity, three angles: [[AI]], [[security]], [[engineering]].",
-      fr: "Une identité, trois angles : [[IA]], [[sécurité]], [[ingénierie]].",
+      en: "One identity, three angles: [[AI->ai]], [[security->security]], [[engineering->engineering]].",
+      fr: "Une identité, trois angles : [[IA->ai]], [[sécurité->security]], [[ingénierie->engineering]].",
     },
   ],
   stats: [

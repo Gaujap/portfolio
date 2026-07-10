@@ -2,8 +2,12 @@
 
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
-import { useReducedMotion } from "framer-motion";
-import { useScroll, useMotionValueEvent } from "framer-motion";
+import {
+  motion,
+  useReducedMotion,
+  useScroll,
+  useMotionValueEvent,
+} from "framer-motion";
 import { scrollState } from "@/lib/scroll-state";
 
 // WebGL is client-only; load it lazily so it never blocks first paint.
@@ -41,8 +45,15 @@ export function CanvasRoot() {
   if (reducedMotion || !mounted) return null;
 
   return (
-    <div className="pointer-events-none fixed inset-0 z-0" aria-hidden="true">
+    // Fade the world in so it arrives instead of popping.
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 1.1, ease: "easeOut" }}
+      className="pointer-events-none fixed inset-0 z-0"
+      aria-hidden="true"
+    >
       <Scene />
-    </div>
+    </motion.div>
   );
 }

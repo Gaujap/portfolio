@@ -146,3 +146,41 @@ body::after {
   mix-blend-mode: overlay;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
+
+/* Grain reads as dirt on warm paper — keep it fainter in light mode. */
+html:not(.dark) body::after {
+  opacity: 0.025;
+}
+
+/* The ship guide's idle life and scan beam. */
+@media (prefers-reduced-motion: no-preference) {
+  .ship-bob {
+    animation: ship-bob 2.8s ease-in-out infinite;
+  }
+}
+
+@keyframes ship-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2.5px);
+  }
+}
+
+.ship-beam {
+  background-image: repeating-linear-gradient(
+    to right,
+    var(--accent) 0 4px,
+    transparent 4px 8px
+  );
+  animation: ship-beam-flow 0.5s linear infinite;
+  transition: opacity 200ms ease;
+}
+
+@keyframes ship-beam-flow {
+  to {
+    background-position: 8px 0;
+  }
+}

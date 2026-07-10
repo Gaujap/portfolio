@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import { Section, Container, Reveal, Eyebrow } from "@/components/ui";
 import { SmoothScroll } from "@/components/immersive/smooth-scroll";
 import { CanvasRoot } from "@/components/immersive/canvas-root";
+import { ShipGuide } from "@/components/immersive/ship-guide";
 import { Hero } from "@/components/immersive/hero";
 import { Manifesto } from "@/components/immersive/manifesto";
 import { ProjectConsole } from "@/components/immersive/project-console";
-import { Contact } from "@/components/contact";
+import { Finale } from "@/components/immersive/finale";
 import { pageMetadata } from "@/lib/seo";
 import { t, type Locale } from "@/lib/i18n";
 import { ui } from "@/content/ui";
@@ -61,10 +61,12 @@ export default async function Home({
   return (
     <SmoothScroll>
       <CanvasRoot />
+      <ShipGuide />
       <div className="relative z-10">
         <Hero
           role={t(site.role, locale)}
           thesis={t(home.thesis, locale)}
+          cta={t(ui.actions.contact, locale)}
           scrollHint={t(home.scrollHint, locale)}
         />
 
@@ -82,6 +84,7 @@ export default async function Home({
             href: `/${locale}/${angle}`,
             label: t(angles[angle].label, locale),
           }))}
+          linkBase={`/${locale}/`}
         />
 
         <ProjectConsole
@@ -89,20 +92,15 @@ export default async function Home({
           projects={consoleProjects}
         />
 
-        <Reveal>
-          <Section labelledBy="now-eyebrow" className="border-t border-line">
-            <Container>
-              <Eyebrow id="now-eyebrow" as="h2">
-                {t(ui.sections.now, locale)}
-              </Eyebrow>
-              <p className="mt-4 max-w-[62ch] font-display text-xl leading-snug">
-                {t(site.now, locale)}
-              </p>
-            </Container>
-          </Section>
-        </Reveal>
-
-        <Contact locale={locale} />
+        <Finale
+          nowLabel={t(ui.sections.now, locale)}
+          nowText={t(site.now, locale)}
+          contactLabel={t(ui.sections.contact, locale)}
+          contactLead={t(ui.contact.lead, locale)}
+          emailLabel={t(ui.actions.email, locale)}
+          email={site.email}
+          socials={site.socials}
+        />
       </div>
     </SmoothScroll>
   );
