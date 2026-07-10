@@ -1,8 +1,12 @@
 ## Problème
 
-Je voulais un assistant qui soit réellement le mien — toujours disponible, et privé par défaut. La plupart des assistants cloud envoient chaque phrase et chaque intention sur les serveurs de quelqu'un d'autre, ce qui les disqualifie pour tout ce qui compte vraiment à mes yeux. Mon objectif : un système où le modèle tourne en local, où le contrôle vocal est assez fiable pour lui faire confiance en mains libres, et où le cloud est un repli optionnel plutôt que le chemin par défaut.
+<Lead>Privé par défaut, mains libres, toujours disponible : un assistant vocal dont le cerveau tourne sur ma machine, pas dans le cloud de quelqu'un d'autre.</Lead>
+
+Je voulais un assistant qui soit réellement le mien. La plupart des assistants cloud envoient chaque phrase et chaque intention sur les serveurs de quelqu'un d'autre, ce qui les disqualifie pour tout ce qui compte vraiment à mes yeux. Mon objectif : un système où le modèle tourne en local, où le contrôle vocal est assez fiable pour lui faire confiance en mains libres, et où le cloud est un repli optionnel plutôt que le chemin par défaut.
 
 ## Contraintes
+
+<Lead>Un modèle 14B sur un GPU AMD grand public, un budget de latence serré de bout en bout, et des services qui doivent survivre seuls aux redémarrages.</Lead>
 
 - **Du matériel grand public, pas un datacenter.** Le modèle tourne sur un AMD **RX 7900 XTX** via **ROCm**, nettement moins mature que l'écosystème CUDA — bizarreries de pilotes, moins de wheels précompilées, et beaucoup de réglages manuels pour stabiliser **Qwen 2.5 14B** autour de 63 tok/s. {/* TODO: verify */}
 - **Budget de latence.** Une boucle mains libres n'est agréable que si le mot-clé, la transcription, l'inférence et la synthèse vocale tiennent dans un budget cumulé serré, donc chaque étape devait être rapide en soi.
@@ -10,12 +14,18 @@ Je voulais un assistant qui soit réellement le mien — toujours disponible, et
 
 ## Approche
 
+<Lead>Un orchestrateur FastAPI enchaîne des briques vocales entièrement locales en services systemd, avec une règle : 95 % de fiabilité sur quelques workflows avant d'en ajouter.</Lead>
+
 Le backend est en **FastAPI**, exposant à la fois du REST et un canal **WebSocket** pour les interactions en streaming, avec un registre d'outils modulaire pour ajouter des capacités sans toucher au cœur. Le pipeline vocal est une chaîne de composants locaux : **openWakeWord** pour l'activation, **faster-whisper** pour la reconnaissance vocale en français, le LLM pour le raisonnement, et **Piper** pour la synthèse — chacun câblé comme service utilisateur **systemd** pour que l'ensemble démarre à l'ouverture de session. **Qwen 2.5 14B** tourne en local, avec **Claude Haiku** en repli cloud pour les cas où le modèle local manque de confiance ou de capacité. Les tags NFC appellent un endpoint `/trigger` adossé à une table de routage d'intentions qui sépare volontairement les **intentions directes** (action fixe, sans ambiguïté) des **intentions contextuelles** (qui demandent une interprétation). Ma règle directrice : la fiabilité avant l'étendue — atteindre 95 % de fiabilité sur trois ou quatre workflows avant d'en ajouter un cinquième.
 
 ## Ce qui a été livré
 
-Un orchestrateur local-first que j'utilise au quotidien : contrôle vocal mains libres de bout en bout, automatisations déclenchées par NFC au contact, et une dégradation gracieuse vers le cloud quand le modèle local ne suffit pas. Le registre d'outils a rendu l'ajout de nouvelles capacités peu coûteux, et les services systemd font qu'il est simplement là — aucun démarrage manuel. La discipline d'approfondir une poignée de workflows plutôt que de m'éparpiller a payé : le résultat, je lui fais réellement confiance.
+<Lead>Un compagnon quotidien, pas une démo : la voix de bout en bout, des automatisations NFC, et un cloud qui n'intervient que quand le modèle local cale.</Lead>
+
+Un orchestrateur local-first : contrôle vocal mains libres de bout en bout, automatisations déclenchées par NFC au contact, et une dégradation gracieuse vers le cloud quand le modèle local ne suffit pas. Le registre d'outils a rendu l'ajout de nouvelles capacités peu coûteux, et les services systemd font qu'il est simplement là — aucun démarrage manuel. La discipline d'approfondir une poignée de workflows plutôt que de m'éparpiller a payé : le résultat, je lui fais réellement confiance.
 
 ## Ce que je referais autrement
+
+<Lead>Le routeur d'intentions aurait dû être des données, pas du code — et le travail ingrat de la fiabilité doit sans cesse être défendu contre l'attrait de la nouveauté.</Lead>
 
 La table de routage d'intentions a grandi de façon organique, un `if` à la fois, et c'est aujourd'hui la partie du système dont je suis le moins satisfait. Ce qui a commencé comme une séparation propre entre intentions directes et contextuelles a accumulé des cas particuliers qui vivent dans le code plutôt que dans les données — ce qui veut dire qu'ajouter une intention, c'est éditer et redéployer plutôt que changer une config. Je la repenserais en **schéma déclaratif** : les intentions, leurs déclencheurs, leur routage et leurs replis décrits comme des données que le routeur interprète, et non comme de la logique de branchement. L'autre tension honnête, c'est l'envie d'ajouter un cinquième puis un sixième workflow alors que les quatre premiers ne sont pas encore à 95 % — la nouveauté est toujours plus tentante que le travail ingrat de fiabilité, et je dois sans cesse me reconvaincre de faire le travail ingrat.

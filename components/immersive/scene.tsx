@@ -28,6 +28,8 @@ const PALETTES = {
 const visuals = {
   accent: PALETTES.dark.accent as string,
   opacity: 0.1,
+  /** Which form is currently up — forms only animate while active. */
+  activeForm: 0,
   /** Bumped when the theme flips; materials re-sync lazily. */
   version: 0,
 };
@@ -122,7 +124,7 @@ function WaveformRing({ index }: { index: number }) {
 
   useFrame((state) => {
     const instanced = mesh.current;
-    if (!instanced || scrollState.activeProject !== index) return;
+    if (!instanced || visuals.activeForm !== index) return;
     const t = state.clock.elapsedTime;
     for (let i = 0; i < BARS; i++) {
       const angle = (i / BARS) * Math.PI * 2;
@@ -155,7 +157,7 @@ function RankingStack({ index }: { index: number }) {
   const material = useSyncedMaterial();
 
   useFrame((state) => {
-    if (scrollState.activeProject !== index) return;
+    if (visuals.activeForm !== index) return;
     const t = state.clock.elapsedTime;
     refs.current.forEach((plane, i) => {
       if (!plane) return;
@@ -207,7 +209,7 @@ function NodeQueue({ index }: { index: number }) {
       lineMaterial.userData.version = visuals.version;
       lineMaterial.color.set(visuals.accent);
     }
-    if (scrollState.activeProject !== index) return;
+    if (visuals.activeForm !== index) return;
     const t = state.clock.elapsedTime;
     const pulse = (t * 1.4) % NODES;
     refs.current.forEach((node, i) => {
@@ -262,7 +264,7 @@ function BridgedClusters({ index }: { index: number }) {
       bridgeMaterial.userData.version = visuals.version;
       bridgeMaterial.color.set(visuals.accent);
     }
-    if (scrollState.activeProject !== index) return;
+    if (visuals.activeForm !== index) return;
     const t = state.clock.elapsedTime;
     left.current?.rotation.set(0, t * 0.5, 0);
     right.current?.rotation.set(0, -t * 0.5, 0);
@@ -300,7 +302,7 @@ function TimetableLattice({ index }: { index: number }) {
 
   useFrame((state) => {
     const instanced = mesh.current;
-    if (!instanced || scrollState.activeProject !== index) return;
+    if (!instanced || visuals.activeForm !== index) return;
     const t = state.clock.elapsedTime;
     for (let i = 0; i < COUNT; i++) {
       const col = i % COLS;
@@ -335,19 +337,29 @@ const FORMS = [
   TimetableLattice,
 ];
 
-function Centerpiece() {
+function Centerpiece({
+  fixedForm,
+  presence,
+}: {
+  /** Lock the centerpiece to one project's form (work pages). */
+  fixedForm?: number;
+  /** Constant presence override; defaults to the console-driven value. */
+  presence?: number;
+}) {
   const group = useRef<THREE.Group>(null);
 
   useFrame((_, delta) => {
     const g = group.current;
     if (!g) return;
 
+    const active = fixedForm ?? scrollState.activeProject;
+    const lit = presence ?? scrollState.projectsPresence;
+    visuals.activeForm = active;
+
     // Update the shared visuals once per frame. Light mode draws in denser
     // ink strokes; dark mode stays a soft glow.
     const dark = document.documentElement.classList.contains("dark");
-    visuals.opacity = dark
-      ? 0.1 + scrollState.projectsPresence * 0.42
-      : 0.2 + scrollState.projectsPresence * 0.5;
+    visuals.opacity = dark ? 0.1 + lit * 0.42 : 0.2 + lit * 0.5;
     const accent = dark ? PALETTES.dark.accent : PALETTES.light.accent;
     if (visuals.accent !== accent) {
       visuals.accent = accent;
@@ -359,12 +371,12 @@ function Centerpiece() {
     g.rotation.z += (scrollState.pointerX * 0.16 - g.rotation.z) * 0.05;
     g.position.y += (-scrollState.pointerY * 0.4 - g.position.y) * 0.05;
 
-    // A ghost behind the hero and manifesto; fully lit among the projects.
-    g.scale.setScalar(0.75 + scrollState.projectsPresence * 0.45);
+    // A ghost behind quiet sections; fully lit when the work is on stage.
+    g.scale.setScalar(0.75 + lit * 0.45);
 
-    // Only the active project's form is up; the others fold away.
+    // Only the active form is up; the others fold away.
     g.children.forEach((child, i) => {
-      const target = i === scrollState.activeProject ? 1 : 0;
+      const target = i === active ? 1 : 0;
       const next = child.scale.x + (target - child.scale.x) * 0.07;
       child.scale.setScalar(Math.max(0.0001, next));
       child.visible = next > 0.02;
@@ -375,7 +387,7 @@ function Centerpiece() {
     // Offset right so it frames the left-aligned type instead of sitting on it.
     <group ref={group} position={[2.7, 0, -3]}>
       {FORMS.map((Form, i) => (
-        <group key={i} scale={i === 0 ? 1 : 0.0001}>
+        <group key={i} scale={i === (fixedForm ?? 0) ? 1 : 0.0001}>
           <Form index={i} />
         </group>
       ))}
@@ -399,7 +411,13 @@ function Rig() {
   return null;
 }
 
-export function Scene() {
+export function Scene({
+  fixedForm,
+  presence,
+}: {
+  fixedForm?: number;
+  presence?: number;
+}) {
   // Lighter world on small screens: fewer particles, capped resolution.
   const small =
     typeof window !== "undefined" &&
@@ -417,7 +435,7 @@ export function Scene() {
     >
       <Rig />
       <Particles count={small ? 850 : 1600} />
-      <Centerpiece />
+      <Centerpiece fixedForm={fixedForm} presence={presence} />
     </Canvas>
   );
 }

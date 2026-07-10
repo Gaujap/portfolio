@@ -1,8 +1,12 @@
 ## Problème
 
-C'est la migration sur laquelle je travaille pendant mon alternance chez 2C2L : une plateforme de planification **Django** héritée qui sert environ 30 écoles de ski et de théâtre en production. La plateforme fonctionne, mais elle a vieilli au point de devenir de plus en plus difficile à faire évoluer ; la mission était donc de la moderniser — un frontend **Vue 3 / Quasar** adossé à une API nouvellement conçue. Le hic, c'est que ce n'est pas une réécriture sur table rase ; c'est de la chirurgie sur un système dont de vraies écoles dépendent pour faire tourner leurs saisons.
+<Lead>Mon projet d'alternance chez 2C2L : moderniser une plateforme de planification Django héritée qu'une trentaine d'écoles de ski et de théâtre utilisent en production.</Lead>
+
+C'est mon chantier principal depuis le premier jour. La plateforme fonctionne, mais elle a vieilli au point de devenir de plus en plus difficile à faire évoluer ; la mission était donc de la moderniser — un frontend **Vue 3 / Quasar** adossé à une API nouvellement conçue. Le hic, c'est que ce n'est pas une réécriture sur table rase ; c'est de la chirurgie sur un système dont de vraies écoles dépendent pour faire tourner leurs saisons.
 
 ## Contraintes
+
+<Lead>Zéro interruption pendant toute la migration, une équipe de trois, et de vraies écoles en pleine saison qui ne peuvent pas attendre le prochain sprint.</Lead>
 
 - **Zéro interruption, du début à la fin.** La contrainte déterminante : le système hérité doit rester en ligne pendant toute la migration. Ces ~30 écoles ne peuvent pas tomber — surtout pas pendant les pics de saison de ski, quand la plateforme est le plus sollicitée et le plus scrutée. {/* TODO: verify */}
 - **Petite équipe.** Trois personnes portant en même temps un produit en production, une nouvelle API et un nouveau frontend. {/* TODO: verify */}
@@ -10,12 +14,18 @@ C'est la migration sur laquelle je travaille pendant mon alternance chez 2C2L : 
 
 ## Approche
 
-Je mène ce chantier comme une **migration en strangler-fig** plutôt qu'un basculement d'un seul coup : la nouvelle API et le frontend Vue 3 / Quasar grandissent aux côtés de l'application Django héritée, reprenant une capacité à la fois pendant que l'ancien système continue de servir tout ce qui n'est pas encore migré. Les nouvelles surfaces sont construites sur la nouvelle API ; la plateforme héritée reste la référence pour le reste, jusqu'à ce que chaque tranche soit éprouvée puis transférée. Cela me permet de faire basculer de vrais utilisateurs vers des chemins modernes de façon incrémentale, de valider sous une charge de production réelle, et de toujours garder l'ancien système comme repli plutôt que de jouer une saison sur un unique basculement.
+<Lead>Strangler-fig plutôt que big-bang : la nouvelle stack absorbe une capacité à la fois pendant que le Django hérité continue de servir le reste.</Lead>
+
+La nouvelle API et le frontend Vue 3 / Quasar grandissent aux côtés de l'application Django héritée, en reprenant le terrain progressivement plutôt que par un basculement unique. Les nouvelles surfaces sont construites sur la nouvelle API ; la plateforme héritée reste la référence pour le reste, jusqu'à ce que chaque tranche soit éprouvée puis transférée. Cela me permet de faire basculer de vrais utilisateurs vers des chemins modernes de façon incrémentale, de valider sous une charge de production réelle, et de toujours garder l'ancien système comme repli plutôt que de jouer une saison sur un unique basculement.
 
 ## Ce qui a été livré
 
-Une migration en cours mais déjà en production : des parties de la plateforme tournent désormais sur le nouveau frontend Vue 3 / Quasar et la nouvelle API, tandis que le système Django hérité continue de servir le reste — le tout sans l'interruption que les écoles ne pouvaient pas se permettre. L'approche strangler-fig a tenu : les tranches passent en production de façon incrémentale, validées face à l'usage réel, avec le système hérité comme filet de sécurité. Elle a prouvé qu'une modernisation aussi contrainte peut se faire sous un produit vivant, sans exiger qu'il s'arrête.
+<Lead>La migration est vivante : de vraies tranches tournent déjà en production sur la nouvelle stack, validées par l'usage réel, sans coupure à ce jour.</Lead>
+
+Des parties de la plateforme tournent désormais sur le nouveau frontend Vue 3 / Quasar et la nouvelle API, tandis que le système Django hérité continue de servir le reste. L'approche strangler-fig a tenu : les tranches passent en production de façon incrémentale, validées face à l'usage réel, avec le système hérité comme filet de sécurité. Elle a prouvé qu'une modernisation aussi contrainte peut se faire sous un produit vivant, sans exiger qu'il s'arrête.
 
 ## Ce que je referais autrement
+
+<Lead>Un modèle propre ne se plaque pas sur des années d'hypothèses accumulées dans un schéma — la prochaine fois, je commencerais par l'archéologie, pas par la conception.</Lead>
 
 Le coût le plus dur et le plus sous-estimé, ç'a été la **divergence de modèle de données** entre l'hérité et le nouveau. L'ancien schéma Django encode des années d'hypothèses accumulées — règles implicites, cas particuliers, champs qui signifient quelque chose de subtilement différent de ce que leur nom suggère — et le modèle plus propre de la nouvelle API ne correspond pas terme à terme. Faire tourner les deux systèmes en parallèle, c'est les maintenir cohérents par-dessus cet écart, et chaque décalage devient une couche de traduction, un souci de synchronisation, ou un bug subtil qui n'apparaît qu'avec de vraies données. Si je repartais de zéro, je passerais beaucoup plus de temps en amont à *rétro-concevoir la vraie sémantique* du modèle hérité — écrire ce que les données signifient réellement, pas ce que le schéma prétend — avant de concevoir le nouveau. Je suis passé trop vite à la conception propre, et je l'ai payé en travail de réconciliation qu'un démarrage plus lent, plus archéologique, aurait évité.

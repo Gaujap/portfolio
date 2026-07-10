@@ -1,8 +1,12 @@
 ## Problème
 
-Vybe est une plateforme de creator economy pensée pour le marché français : un espace où les créateurs construisent une audience et, surtout, se rémunèrent. Le manque que je voulais combler, c'est que les outils génériques collent rarement aux spécificités du marché français — les versements, les usages, le contexte local des créateurs — donc le produit est conçu autour de ça dès le départ. C'est encore en développement, une équipe de trois personnes qui construit vers une démo pré-levée de fonds.
+<Lead>Vybe est une plateforme de creator economy taillée pour le marché français — où les créateurs se construisent une audience et, surtout, en vivent.</Lead>
+
+C'est un pari sur la spécificité. Le manque que je voulais combler, c'est que les outils génériques collent rarement aux spécificités du marché français — les versements, les usages, le contexte local des créateurs — donc le produit est conçu autour de ça dès le départ. C'est encore en développement, une équipe de trois personnes qui construit vers une démo pré-levée de fonds.
 
 ## Contraintes
+
+<Lead>Trois personnes, de l'argent réel en jeu et une échéance de levée — sans le droit de simuler l'auth, les paiements ou les médias.</Lead>
 
 - **Petite équipe, large périmètre.** À trois pour couvrir le frontend, le backend, les paiements et le média, chaque choix d'architecture doit se justifier — pas de place pour de l'infra qu'il faudrait maintenir sans en avoir encore besoin.
 - **Une rigueur de niveau paiement.** Dès que de l'argent réel circule, « ça marche à peu près » ne suffit plus. Les versements aux créateurs passent par **Stripe Connect Express**, et gérer correctement l'onboarding, la vérification et l'état des versements n'est pas négociable.
@@ -10,12 +14,18 @@ Vybe est une plateforme de creator economy pensée pour le marché français : u
 
 ## Approche
 
+<Lead>Des briques managées et éprouvées — Stripe Connect, Supabase, R2 — pour tout ce qui est difficile à bien faire, et nos heures d'équipe pour le produit.</Lead>
+
 Le frontend est en **Next.js 14** avec l'App Router ; le backend en **Fastify** avec des **WebSockets** pour les interactions temps réel. Les données vivent dans **PostgreSQL** via **Supabase**, accédées avec **Prisma** pour un schéma typé et des migrations suivies. La monétisation des créateurs repose sur **Stripe Connect Express**, qui gère la vérification d'identité et la mécanique de versement que nous n'avons aucune raison de réimplémenter. Le média — la partie lourde et coûteuse à servir — part sur **Cloudflare R2** pour garder des coûts d'egress raisonnables et sortir les gros fichiers de la base principale. Le fil conducteur : nous appuyer sur des primitives managées et correctes pour ce qui est difficile à bien faire, et dépenser nos heures d'équipe limitées sur le produit lui-même.
 
 ## Ce qui a été livré
 
-Une plateforme en développement dont l'architecture de base est en place : comptes créateurs authentifiés, flux de versement Stripe Connect câblé de bout en bout, interactions temps réel via WebSockets, et médias servis depuis R2. Elle est construite pour démontrer de façon convaincante en vue d'une levée, tout en étant réelle en dessous — les chemins de paiement et d'authentification ne sont pas de la poudre aux yeux. La stack est volontairement banale là où la banalité est une vertu, pour que l'équipe avance vite sur ce qui différencie le produit.
+<Lead>Une plateforme en développement dont la démo est honnête : l'auth, les versements, le temps réel et les médias fonctionnent pour de vrai.</Lead>
+
+L'architecture de base est en place : comptes créateurs authentifiés, flux de versement Stripe Connect câblé de bout en bout, interactions temps réel via WebSockets, et médias servis depuis R2. Elle est construite pour démontrer de façon convaincante en vue d'une levée, tout en étant réelle en dessous — les chemins de paiement et d'authentification ne sont pas de la poudre aux yeux. La stack est volontairement banale là où la banalité est une vertu, pour que l'équipe avance vite sur ce qui différencie le produit.
 
 ## Ce que je referais autrement
+
+<Lead>Stripe Connect est un sous-système asynchrone et à états, pas une simple intégration — et ma couche de paiement « agnostique » était une abstraction sans besoin réel.</Lead>
 
 **L'onboarding Stripe Connect Express est bien plus complexe que ne le laisse croire le chemin heureux de la doc**, et je l'ai sous-estimé. États de compte, exigences de capacités, vérifications qui peuvent rester en attente plusieurs jours, et la chorégraphie de webhooks pour garder nos données synchronisées — je l'ai abordé comme « intégrer un prestataire de versement » alors que c'est en réalité un sous-système asynchrone et à états à part entière. Si je repartais de zéro, je modéliserais explicitement le cycle de vie du compte Connect dans notre propre schéma dès le premier jour, au lieu de lire l'état chez Stripe au coup par coup. L'erreur connexe, c'est un peu d'abstraction prématurée : j'ai construit une couche de paiement générique pour « rester agnostique du prestataire » avant d'avoir un second prestataire ou la moindre raison réelle, et ça n'a fait qu'ajouter de l'indirection par-dessus le SDK déjà excellent de Stripe. Je l'ai depuis supprimée — l'abstraction doit suivre le second cas d'usage, pas le précéder.
