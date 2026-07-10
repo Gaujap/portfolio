@@ -1,8 +1,10 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Section, Container, Eyebrow, Heading, TagList, TextLink } from "@/components/ui";
 import { HermesDiagram } from "@/components/hermes-diagram";
 import { loadWriteup } from "@/content/projects/writeups";
 import { projects, PROJECT_SLUGS } from "@/content/projects";
+import { pageMetadata } from "@/lib/seo";
 import { t, type Locale } from "@/lib/i18n";
 import { ui } from "@/content/ui";
 
@@ -12,6 +14,22 @@ export function generateStaticParams() {
 }
 
 export const dynamicParams = false;
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: Locale; slug: string }>;
+}): Promise<Metadata> {
+  const { locale, slug } = await params;
+  const project = projects.find((entry) => entry.slug === slug);
+  if (!project) return {};
+  return pageMetadata({
+    locale,
+    path: `/work/${slug}`,
+    title: project.name,
+    description: t(project.tagline, locale),
+  });
+}
 
 export default async function WorkPage({
   params,
