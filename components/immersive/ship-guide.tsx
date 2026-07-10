@@ -18,34 +18,51 @@ const PARK_MS = 3200;
 const SCROLL_QUIET_MS = 280;
 /** Close enough to a target to count as arrived. */
 const ARRIVAL_PX = 12;
-/** Idle time between asteroid visits. */
-const ASTEROID_MIN_MS = 7000;
-const ASTEROID_MAX_MS = 15000;
-/** The ship takes a beat to aim before firing — so you can watch it work. */
-const AIM_MS = 380;
-const BOOM_MS = 900;
+/** Time between asteroid events (a single rock, or sometimes a shower). */
+const SPAWN_MIN_MS = 5000;
+const SPAWN_MAX_MS = 11000;
+/** Chance an asteroid event is a whole shower. */
+const SHOWER_CHANCE = 0.28;
+/** The ship takes a beat to aim, and a beat to admire its work. */
+const AIM_MS = 420;
+const ADMIRE_MS = 450;
+/** Debris drifts off in its own directions and fades over a few seconds. */
+const FRAG_LIFE_MIN_MS = 2200;
+const FRAG_LIFE_MAX_MS = 3400;
+
+const MAX_ROCKS = 8;
+const MAX_FRAGS = 24;
 
 type Mode = "free" | "transit" | "present";
 
-interface Asteroid {
+interface Rock {
   x: number;
   y: number;
   vx: number;
   vy: number;
   spin: number;
+  scale: number;
+}
+
+interface Fragment {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  spin: number;
+  spinV: number;
+  bornAt: number;
+  life: number;
 }
 
 /**
- * The ship guide, third edition. Its life:
- * - By default it's FREE: lazy patrol, and when an asteroid drifts by, it
- *   stalks it, takes aim, and fires — slowly enough to watch.
- * - When the reader settles and there's something new to show, duty calls:
- *   it flies over (transit), presents the point ~2s (halo lights via the
- *   target's focus callback), moves to the next, and when the tour is done it
- *   returns to its life. Each published tour is shown once.
- * - Scrolling never makes it chase anything: any scroll aborts the tour and
- *   frees it; settling re-runs whatever wasn't fully shown.
- * - Asteroids drift through regardless, but it only hunts when free.
+ * The ship guide, final form. Its life:
+ * - FREE: lazy patrol. Rocks drift in — singles, sometimes whole showers —
+ *   and it hunts the nearest one it can see: stalks it nose-first, holds its
+ *   aim, fires, watches the debris a beat, then takes the next.
+ * - DUTY: when the reader settles on something new, it flies over, presents
+ *   ~2s (halo lights on arrival), and returns to its life. Shown once.
+ * - Scrolling always frees it; rocks it ignores drift through unharmed.
  * Desktop-only, absent under reduced motion.
  */
 export function ShipGuide() {
@@ -58,8 +75,8 @@ export function ShipGuide() {
 
   const flame = useRef<HTMLSpanElement>(null);
   const laser = useRef<HTMLSpanElement>(null);
-  const asteroidEl = useRef<HTMLSpanElement>(null);
-  const fragmentEls = useRef<Array<HTMLSpanElement | null>>([]);
+  const rockEls = useRef<Array<HTMLSpanElement | null>>([]);
+  const fragEls = useRef<Array<HTMLSpanElement | null>>([]);
 
   // Flight state lives in refs — the loop runs at 60fps without re-renders.
   const mode = useRef<Mode>("free");
@@ -70,12 +87,14 @@ export function ShipGuide() {
   const focused = useRef<ShipTarget | null>(null);
   const lastScrollY = useRef(0);
   const scrollQuietAt = useRef(0);
-  // The asteroid lives independently of duty.
-  const asteroid = useRef<Asteroid | null>(null);
-  const nextAsteroidAt = useRef(0);
+  // Space weather.
+  const rocks = useRef<Rock[]>([]);
+  const frags = useRef<Fragment[]>([]);
+  const nextSpawnAt = useRef(0);
+  const showerLeft = useRef(0);
+  const nextShowerDropAt = useRef(0);
   const aimUntil = useRef(0);
-  const boomUntil = useRef(0);
-  const boomAt = useRef({ x: 0, y: 0 });
+  const admireUntil = useRef(0);
   const seed = useRef(1);
 
   useEffect(() => {
@@ -91,6 +110,38 @@ export function ShipGuide() {
     focused.current?.blur?.();
     focused.current = null;
     mode.current = "free";
+  };
+
+  const spawnRock = (shower: boolean) => {
+    if (rocks.current.length >= MAX_ROCKS) return;
+    rocks.current.push({
+      x: window.innerWidth + 24,
+      y: window.innerHeight * (shower ? 0.1 + rand() * 0.5 : 0.25 + rand() * 0.55),
+      // Showers rain through faster and more diagonally.
+      vx: shower ? -(28 + rand() * 16) : -(15 + rand() * 10),
+      vy: shower ? 10 + rand() * 14 : (rand() - 0.5) * 12,
+      spin: rand() * 360,
+      scale: 0.7 + rand() * 0.6,
+    });
+  };
+
+  const explode = (rock: Rock, time: number) => {
+    const count = 5 + Math.floor(rand() * 3);
+    for (let i = 0; i < count; i++) {
+      if (frags.current.length >= MAX_FRAGS) break;
+      const angle = rand() * Math.PI * 2;
+      const speed = 14 + rand() * 34;
+      frags.current.push({
+        x: rock.x,
+        y: rock.y,
+        vx: Math.cos(angle) * speed + rock.vx * 0.3,
+        vy: Math.sin(angle) * speed + rock.vy * 0.3,
+        spin: rand() * 360,
+        spinV: (rand() - 0.5) * 240,
+        bornAt: time,
+        life: FRAG_LIFE_MIN_MS + rand() * (FRAG_LIFE_MAX_MS - FRAG_LIFE_MIN_MS),
+      });
+    }
   };
 
   useAnimationFrame((time, delta) => {
@@ -152,7 +203,6 @@ export function ShipGuide() {
               mode.current = "present";
             }
           } else if (time >= presentUntil.current) {
-            // Shown long enough — on to the next point, or back to its life.
             focused.current?.blur?.();
             focused.current = null;
             stop.current++;
@@ -167,116 +217,143 @@ export function ShipGuide() {
       }
     }
 
-    /* --- The asteroid lives its own life, whatever the ship is doing. --- */
-    if (nextAsteroidAt.current === 0) {
-      nextAsteroidAt.current =
-        time + ASTEROID_MIN_MS + rand() * (ASTEROID_MAX_MS - ASTEROID_MIN_MS);
+    /* --- Space weather: rocks fall whatever the ship is doing. --- */
+    if (nextSpawnAt.current === 0) {
+      nextSpawnAt.current =
+        time + SPAWN_MIN_MS + rand() * (SPAWN_MAX_MS - SPAWN_MIN_MS);
     }
-    if (!asteroid.current && time >= nextAsteroidAt.current) {
-      asteroid.current = {
-        x: window.innerWidth + 24,
-        y: window.innerHeight * (0.3 + rand() * 0.5),
-        vx: -(15 + rand() * 10), // slow enough to watch
-        vy: (rand() - 0.5) * 12,
-        spin: rand() * 360,
-      };
+    if (time >= nextSpawnAt.current) {
+      if (rand() < SHOWER_CHANCE) {
+        showerLeft.current = 4 + Math.floor(rand() * 4);
+        nextShowerDropAt.current = time;
+      } else {
+        spawnRock(false);
+      }
+      nextSpawnAt.current =
+        time + SPAWN_MIN_MS + rand() * (SPAWN_MAX_MS - SPAWN_MIN_MS);
+    }
+    if (showerLeft.current > 0 && time >= nextShowerDropAt.current) {
+      spawnRock(true);
+      showerLeft.current--;
+      nextShowerDropAt.current = time + 260 + rand() * 420;
     }
 
-    const rock = asteroid.current;
-    let hunting = false;
-
-    if (rock) {
+    // Advance every rock; drop the escaped.
+    rocks.current = rocks.current.filter((rock) => {
       rock.x += (rock.vx * delta) / 1000;
       rock.y += (rock.vy * delta) / 1000;
       rock.spin += delta * 0.045;
-      if (asteroidEl.current) {
-        asteroidEl.current.style.opacity = "0.9";
-        asteroidEl.current.style.transform = `translate(${rock.x}px, ${rock.y}px) rotate(${rock.spin}deg)`;
-      }
+      return (
+        rock.x > -40 && rock.x < window.innerWidth + 60 &&
+        rock.y > -40 && rock.y < window.innerHeight + 60
+      );
+    });
 
-      const escaped =
-        rock.x < -40 || rock.x > window.innerWidth + 60 ||
-        rock.y < -40 || rock.y > window.innerHeight + 40;
+    // The ship only notices rocks well inside the viewport — the hunt must
+    // happen where the visitor can watch it.
+    const noticeable = rocks.current.filter(
+      (rock) =>
+        rock.x < window.innerWidth - 140 && rock.x > 80 &&
+        rock.y > 60 && rock.y < window.innerHeight - 60,
+    );
 
-      if (escaped) {
-        // Got away — if the ship was busy presenting, it never even tried.
-        if (asteroidEl.current) asteroidEl.current.style.opacity = "0";
-        asteroid.current = null;
+    let prey: Rock | null = null;
+    const admiring = time < admireUntil.current;
+
+    if (mode.current === "free" && !scrolling && !admiring && noticeable.length > 0) {
+      // Nearest first — a shower becomes a chain of kills.
+      prey = noticeable.reduce((a, b) =>
+        Math.hypot(a.x - x.get(), a.y - y.get()) <
+        Math.hypot(b.x - x.get(), b.y - y.get())
+          ? a
+          : b,
+      );
+      x.set(prey.x - 36);
+      y.set(prey.y);
+      const inRange = Math.hypot(prey.x - 36 - x.get(), prey.y - y.get()) < 30;
+
+      if (inRange && aimUntil.current === 0) {
+        aimUntil.current = time + AIM_MS; // hold... aim...
+      } else if (!inRange) {
         aimUntil.current = 0;
-        nextAsteroidAt.current =
-          time + ASTEROID_MIN_MS + rand() * (ASTEROID_MAX_MS - ASTEROID_MIN_MS);
-      } else if (mode.current === "free" && !scrolling) {
-        // Free and settled: the hunt is on — stalk, aim, fire.
-        hunting = true;
-        x.set(rock.x - 36);
-        y.set(rock.y);
-        const inRange = Math.hypot(rock.x - 36 - x.get(), rock.y - y.get()) < 30;
-
-        if (inRange && aimUntil.current === 0) {
-          aimUntil.current = time + AIM_MS; // hold... aim...
-        } else if (!inRange) {
-          aimUntil.current = 0;
-        } else if (time >= aimUntil.current) {
-          // Fire.
-          if (laser.current) {
-            const el = laser.current;
-            el.style.left = `${x.get() + 10}px`;
-            el.style.top = `${y.get()}px`;
-            el.style.width = `${Math.max(18, rock.x - x.get() - 12)}px`;
-            el.style.opacity = "1";
-            setTimeout(() => {
-              el.style.opacity = "0";
-            }, 150);
-          }
-          boomAt.current = { x: rock.x, y: rock.y };
-          boomUntil.current = time + BOOM_MS;
-          if (asteroidEl.current) asteroidEl.current.style.opacity = "0";
-          asteroid.current = null;
-          aimUntil.current = 0;
-          nextAsteroidAt.current =
-            time + ASTEROID_MIN_MS + rand() * (ASTEROID_MAX_MS - ASTEROID_MIN_MS);
+      } else if (time >= aimUntil.current) {
+        // Fire — laser from the nose to the rock, then admire the debris.
+        if (laser.current) {
+          const el = laser.current;
+          const dx = prey.x - x.get();
+          const dy = prey.y - y.get();
+          el.style.left = `${x.get() + 8}px`;
+          el.style.top = `${y.get()}px`;
+          el.style.width = `${Math.max(16, Math.hypot(dx, dy) - 10)}px`;
+          el.style.transform = `rotate(${(Math.atan2(dy, dx) * 180) / Math.PI}deg)`;
+          el.style.opacity = "1";
+          setTimeout(() => {
+            el.style.opacity = "0";
+          }, 150);
         }
-      } else {
+        explode(prey, time);
+        rocks.current = rocks.current.filter((rock) => rock !== prey);
         aimUntil.current = 0;
+        admireUntil.current = time + ADMIRE_MS;
+        prey = null;
       }
+    } else if (mode.current !== "free" || scrolling) {
+      aimUntil.current = 0;
     }
 
-    if (mode.current === "free" && !hunting) {
-      // Lazy patrol; heading from the path derivative (continuous by
-      // construction — the nose can never snap at a turnaround).
+    if (mode.current === "free" && !prey && !admiring) {
+      // Lazy patrol.
       const cx = window.innerWidth * 0.82;
       const cy = window.innerHeight * 0.72;
       x.set(cx + Math.sin(time * 0.00042) * 90);
       y.set(cy + Math.sin(time * 0.00061 + 1.4) * 55);
     }
 
-    // Fragments of the last popped asteroid scatter and fade.
-    const boomLeft = boomUntil.current - time;
-    fragmentEls.current.forEach((el, i) => {
+    // Render rocks and debris through their pools.
+    rockEls.current.forEach((el, i) => {
       if (!el) return;
-      if (boomLeft > 0) {
-        const k = 1 - boomLeft / BOOM_MS;
-        const angle = (i / fragmentEls.current.length) * Math.PI * 2 + 0.6;
-        el.style.opacity = String(0.9 * (1 - k * k));
-        el.style.transform = `translate(${
-          boomAt.current.x + Math.cos(angle) * 46 * k
-        }px, ${boomAt.current.y + Math.sin(angle) * 46 * k}px) rotate(${k * 240}deg) scale(${1 - k * 0.5})`;
+      const rock = rocks.current[i];
+      if (rock) {
+        el.style.opacity = "0.9";
+        el.style.transform = `translate(${rock.x}px, ${rock.y}px) rotate(${rock.spin}deg) scale(${rock.scale})`;
       } else {
         el.style.opacity = "0";
       }
     });
 
-    // Heading: analytic while patrolling, velocity in real flight, level when
-    // presenting, frozen while the reader scrolls.
+    frags.current = frags.current.filter((frag) => time - frag.bornAt < frag.life);
+    fragEls.current.forEach((el, i) => {
+      if (!el) return;
+      const frag = frags.current[i];
+      if (frag) {
+        const k = (time - frag.bornAt) / frag.life;
+        frag.x += (frag.vx * delta) / 1000;
+        frag.y += (frag.vy * delta) / 1000;
+        frag.vx *= 0.998;
+        frag.vy *= 0.998;
+        frag.spin += (frag.spinV * delta) / 1000;
+        el.style.opacity = String(0.9 * (1 - k * k));
+        el.style.transform = `translate(${frag.x}px, ${frag.y}px) rotate(${frag.spin}deg) scale(${1 - k * 0.4})`;
+      } else {
+        el.style.opacity = "0";
+      }
+    });
+
+    // Heading: locked on the prey while hunting (a hunter faces its prey),
+    // analytic on patrol, velocity in real flight, level when presenting,
+    // frozen while the reader scrolls.
     const vx = x.getVelocity();
     const vy = y.getVelocity();
     const speed = Math.hypot(vx, vy);
     let heading: number | null = null;
-    if (mode.current === "free" && !hunting) {
+    if (prey) {
+      heading =
+        (Math.atan2(prey.y - y.get(), prey.x - x.get()) * 180) / Math.PI;
+    } else if (mode.current === "free" && !admiring) {
       const dx = Math.cos(time * 0.00042) * 90 * 0.00042;
       const dy = Math.cos(time * 0.00061 + 1.4) * 55 * 0.00061;
       heading = (Math.atan2(dy, dx) * 180) / Math.PI;
-    } else if (hunting || (!scrolling && speed > 200)) {
+    } else if (!scrolling && speed > 200) {
       heading = (Math.atan2(vy, vx) * 180) / Math.PI;
     } else if (!scrolling && mode.current === "present") {
       heading = 0;
@@ -284,7 +361,7 @@ export function ShipGuide() {
     if (heading !== null) {
       const current = ((rotate.get() % 360) + 540) % 360 - 180;
       const d = ((heading - current + 540) % 360) - 180;
-      rotate.set(current + d * 0.08);
+      rotate.set(current + d * 0.1);
     }
 
     if (flame.current) {
@@ -324,15 +401,23 @@ export function ShipGuide() {
         </span>
       </motion.div>
 
-      {/* Asteroid-hunt props: one rock, one laser, a handful of fragments. */}
+      {/* Space weather props: a pool of rocks, one laser, a debris pool. */}
       <span aria-hidden="true" className="pointer-events-none fixed left-0 top-0 z-[54]">
-        <span ref={asteroidEl} className="ship-asteroid" />
-        <span ref={laser} className="ship-laser" />
-        {Array.from({ length: 5 }, (_, i) => (
+        {Array.from({ length: MAX_ROCKS }, (_, i) => (
           <span
-            key={i}
+            key={`rock-${i}`}
             ref={(el) => {
-              fragmentEls.current[i] = el;
+              rockEls.current[i] = el;
+            }}
+            className="ship-asteroid"
+          />
+        ))}
+        <span ref={laser} className="ship-laser" />
+        {Array.from({ length: MAX_FRAGS }, (_, i) => (
+          <span
+            key={`frag-${i}`}
+            ref={(el) => {
+              fragEls.current[i] = el;
             }}
             className="ship-fragment"
           />
