@@ -116,16 +116,14 @@ export function ShipGuide() {
   const waypointUntil = useRef(0);
   /** Travel direction (radians) during curved intercepts. */
   const bank = useRef(0);
-  const seed = useRef(1);
 
   useEffect(() => {
     setEnabled(window.matchMedia("(min-width: 1024px) and (hover: hover)").matches);
   }, []);
 
-  const rand = () => {
-    seed.current = (seed.current * 16807) % 2147483647;
-    return seed.current / 2147483647;
-  };
+  // Real randomness: a fixed-seed PRNG replayed the exact same "opening
+  // scene" (same first shower, same edge, same timing) on every page load.
+  const rand = () => Math.random();
 
   const release = () => {
     focused.current?.blur?.();
