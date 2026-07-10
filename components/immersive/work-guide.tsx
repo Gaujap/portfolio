@@ -23,7 +23,17 @@ export function WorkGuide() {
     const nextLink = document.getElementById("work-next");
     if (headings.length === 0) return;
 
-    const perch = (element: HTMLElement, id: string) =>
+    // The perched element carries a halo — light is the connection.
+    let lit: HTMLElement | null = null;
+    const light = (element: HTMLElement | null) => {
+      if (lit === element) return;
+      lit?.classList.remove("guide-lit");
+      element?.classList.add("guide-lit");
+      lit = element;
+    };
+
+    const perch = (element: HTMLElement, id: string) => {
+      light(element);
       ship.publish(
         "work",
         [
@@ -36,6 +46,7 @@ export function WorkGuide() {
         ],
         15,
       );
+    };
 
     const choosePerch = () => {
       // The end-of-page nav takes priority the moment it's meaningfully visible.
@@ -55,6 +66,7 @@ export function WorkGuide() {
       if (current) {
         perch(current, `work-${current.textContent ?? ""}`);
       } else {
+        light(null);
         ship.retract("work");
       }
     };
@@ -76,6 +88,7 @@ export function WorkGuide() {
     return () => {
       headingObserver.disconnect();
       navObserver?.disconnect();
+      light(null);
       ship.retract("work");
     };
   }, [reducedMotion]);

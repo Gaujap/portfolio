@@ -169,18 +169,42 @@ html:not(.dark) body::after {
   }
 }
 
-.ship-beam {
-  background-image: repeating-linear-gradient(
-    to right,
-    var(--accent) 0 4px,
-    transparent 4px 8px
-  );
-  animation: ship-beam-flow 0.5s linear infinite;
-  transition: opacity 200ms ease;
+/*
+ * Halo on whatever the guide is presenting — the connection reads through
+ * light and proximity, not a drawn line.
+ */
+.guide-lit {
+  text-shadow: 0 0 16px color-mix(in oklab, var(--accent) 60%, transparent);
+  transition: text-shadow 500ms ease;
 }
 
-@keyframes ship-beam-flow {
-  to {
-    background-position: 8px 0;
-  }
+/* Asteroid-hunt props (idle patrol easter egg). Plain DOM, next to free. */
+.ship-asteroid {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 13px;
+  height: 13px;
+  border: 1px solid var(--muted);
+  clip-path: polygon(30% 0, 80% 10%, 100% 55%, 70% 100%, 20% 90%, 0 40%);
+  opacity: 0;
+}
+
+.ship-laser {
+  position: fixed;
+  height: 1.5px;
+  background: linear-gradient(to right, var(--accent), transparent);
+  opacity: 0;
+  transition: opacity 140ms ease;
+}
+
+.ship-fragment {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 5px;
+  height: 5px;
+  border: 1px solid var(--accent);
+  clip-path: polygon(50% 0, 100% 100%, 0 80%);
+  opacity: 0;
 }
