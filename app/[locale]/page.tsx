@@ -52,7 +52,9 @@ export default async function Home({
       <Reveal>
         <Section labelledBy="angles-eyebrow" className="border-t border-line">
           <Container>
-            <Eyebrow id="angles-eyebrow">{t(ui.sections.angles, locale)}</Eyebrow>
+            <Eyebrow id="angles-eyebrow" as="h2">
+              {t(ui.sections.angles, locale)}
+            </Eyebrow>
             <p className="mt-4 max-w-[46ch] font-display text-2xl leading-snug">
               {t(ui.home.anglesLead, locale)}
             </p>
@@ -74,7 +76,9 @@ export default async function Home({
       <Reveal>
         <Section labelledBy="work-eyebrow" className="border-t border-line">
           <Container>
-            <Eyebrow id="work-eyebrow">{t(ui.sections.selectedWork, locale)}</Eyebrow>
+            <Eyebrow id="work-eyebrow" as="h2">
+              {t(ui.sections.selectedWork, locale)}
+            </Eyebrow>
             <div className="mt-8 space-y-12">
               {featuredProjects.map((project) => (
                 <ProjectCard key={project.slug} project={project} locale={locale} />
@@ -88,7 +92,9 @@ export default async function Home({
       <Reveal>
         <Section labelledBy="now-eyebrow" className="border-t border-line">
           <Container>
-            <Eyebrow id="now-eyebrow">{t(ui.sections.now, locale)}</Eyebrow>
+            <Eyebrow id="now-eyebrow" as="h2">
+              {t(ui.sections.now, locale)}
+            </Eyebrow>
             <p className="mt-4 max-w-[62ch] font-display text-xl leading-snug">
               {t(site.now, locale)}
             </p>

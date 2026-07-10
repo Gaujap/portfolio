@@ -45,7 +45,9 @@ export function AnglePage({
         <Reveal>
           <Section labelledBy="angle-arch" className="border-t border-line">
             <Container>
-              <Eyebrow id="angle-arch">{t(ui.sections.architecture, locale)}</Eyebrow>
+              <Eyebrow id="angle-arch" as="h2">
+                {t(ui.sections.architecture, locale)}
+              </Eyebrow>
               <div className="mt-8 max-w-3xl">
                 <HermesDiagram label={t(ui.diagrams.hermes, locale)} />
               </div>
@@ -57,7 +59,9 @@ export function AnglePage({
       <Reveal>
         <Section labelledBy="angle-projects" className="border-t border-line">
           <Container>
-            <Eyebrow id="angle-projects">{t(ui.sections.projects, locale)}</Eyebrow>
+            <Eyebrow id="angle-projects" as="h2">
+              {t(ui.sections.projects, locale)}
+            </Eyebrow>
             <div className="mt-8 space-y-12">
               {projects.map((project) => (
                 <ProjectCard
@@ -75,7 +79,9 @@ export function AnglePage({
       <Reveal>
         <Section labelledBy="angle-caps" className="border-t border-line">
           <Container>
-            <Eyebrow id="angle-caps">{t(ui.sections.capabilities, locale)}</Eyebrow>
+            <Eyebrow id="angle-caps" as="h2">
+              {t(ui.sections.capabilities, locale)}
+            </Eyebrow>
             <div className="mt-8">
               <SkillsGrid groups={skills} locale={locale} />
             </div>
@@ -87,7 +93,9 @@ export function AnglePage({
         <Reveal>
           <Section labelledBy="angle-exp" className="border-t border-line">
             <Container>
-              <Eyebrow id="angle-exp">{t(ui.sections.experience, locale)}</Eyebrow>
+              <Eyebrow id="angle-exp" as="h2">
+                {t(ui.sections.experience, locale)}
+              </Eyebrow>
               <div className="mt-8">
                 <ExperienceList items={roles} locale={locale} />
               </div>
