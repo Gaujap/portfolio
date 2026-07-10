@@ -30,7 +30,6 @@ export const ui = {
     experience: { en: "Experience", fr: "Expérience" },
     contact: { en: "Contact", fr: "Contact" },
     languages: { en: "Languages", fr: "Langues" },
-    angles: { en: "Three angles", fr: "Trois angles" },
     projects: { en: "Projects", fr: "Projets" },
     architecture: { en: "Architecture", fr: "Architecture" },
   },
@@ -40,22 +39,12 @@ export const ui = {
       fr: "Pipeline vocal Hermes : mot d'activation vers reconnaissance vocale vers LLM vers synthèse vocale Piper, avec un modèle Qwen en local et un repli cloud Claude Haiku.",
     },
   },
-  carousel: {
-    previous: { en: "Previous project", fr: "Projet précédent" },
-    next: { en: "Next project", fr: "Projet suivant" },
-  },
   labels: {
     private: { en: "Private", fr: "Privé" },
     inProduction: { en: "In production", fr: "En production" },
     inDevelopment: { en: "In development", fr: "En développement" },
     current: { en: "Current", fr: "En cours" },
     primaryFocus: { en: "Primary focus", fr: "Focus principal" },
-  },
-  home: {
-    anglesLead: {
-      en: "One identity, three angles. The same work, a different emphasis.",
-      fr: "Une identité, trois angles. Le même travail, un accent différent.",
-    },
   },
   contact: {
     lead: {
