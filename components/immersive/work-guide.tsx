@@ -88,7 +88,19 @@ export function WorkGuide() {
       : null;
     if (nextLink) navObserver?.observe(nextLink);
 
+    // Jump scrolls (PageDown, anchors, programmatic) can hop clean over the
+    // observer's centre band without an event — a debounced scroll listener
+    // catches whatever the observers miss.
+    let raf = 0;
+    const onScroll = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(choosePerch);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+
     return () => {
+      window.removeEventListener("scroll", onScroll);
+      cancelAnimationFrame(raf);
       headingObserver.disconnect();
       navObserver?.disconnect();
       light(null);

@@ -119,7 +119,7 @@ function Word({
         entry.emphasized && "text-accent italic",
       )}
     >
-      <WordBody entry={entry} linkBase={linkBase} />
+      <WordBody entry={entry} linkBase={linkBase} />{" "}
     </motion.span>
   );
 }
