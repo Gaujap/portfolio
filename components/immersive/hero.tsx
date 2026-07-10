@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { cn } from "@/lib/cn";
 import { parseEmphasis, toWords } from "@/lib/emphasis";
+import { scrollToY } from "@/components/immersive/smooth-scroll";
 import { Container } from "@/components/ui";
 
 /**
@@ -14,10 +15,13 @@ import { Container } from "@/components/ui";
 export function Hero({
   role,
   thesis,
+  cta,
   scrollHint,
 }: {
   role: string;
   thesis: string;
+  /** Label of the contact shortcut — the one action available above the fold. */
+  cta: string;
   scrollHint: string;
 }) {
   const reducedMotion = useReducedMotion();
@@ -72,6 +76,23 @@ export function Hero({
             </motion.span>
           ))}
         </h1>
+
+        {/* Quiet conversion path for the visitor who's already convinced. */}
+        <motion.div {...entrance(1.35)} className="mt-10">
+          <a
+            href="#contact"
+            onClick={(event) => {
+              event.preventDefault();
+              const target = document.getElementById("contact");
+              if (target) {
+                scrollToY(window.scrollY + target.getBoundingClientRect().top);
+              }
+            }}
+            className="inline-flex items-center gap-2 rounded-full border border-line px-5 py-2.5 text-sm font-medium text-fg transition-colors hover:border-accent hover:text-accent"
+          >
+            {cta} ↓
+          </a>
+        </motion.div>
       </Container>
 
       <motion.div
