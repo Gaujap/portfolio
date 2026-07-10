@@ -95,6 +95,8 @@ export interface LanguageProficiency {
 export interface SiteConfig {
   /** Proper noun — not localized. */
   name: string;
+  /** Canonical production origin, e.g. https://gabrieldebarnot.gdtx.fr */
+  url: string;
   role: Localized;
   location: Localized;
   email: string;

@@ -1,11 +1,28 @@
+import type { Metadata } from "next";
 import { Section, Container, Reveal, Eyebrow, Heading } from "@/components/ui";
 import { ExperienceList } from "@/components/experience-list";
 import { Contact } from "@/components/contact";
+import { pageMetadata } from "@/lib/seo";
 import { t, type Locale } from "@/lib/i18n";
 import { ui } from "@/content/ui";
 import { site } from "@/content/site";
+import { seo } from "@/content/seo";
 import { about } from "@/content/about";
 import { experience } from "@/content/experience";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: Locale }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  return pageMetadata({
+    locale,
+    path: "/about",
+    title: t(seo.about.title, locale),
+    description: t(seo.about.description, locale),
+  });
+}
 
 export default async function AboutPage({
   params,
