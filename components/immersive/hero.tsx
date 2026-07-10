@@ -72,7 +72,7 @@ export function Hero({
                 entry.emphasized && "text-accent italic",
               )}
             >
-              {entry.word}
+              {entry.word}{" "}
             </motion.span>
           ))}
         </h1>

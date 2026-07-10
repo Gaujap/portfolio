@@ -1,5 +1,7 @@
+import { Children } from "react";
 import type { MDXComponents } from "mdx/types";
 import { RevealBlock } from "@/components/immersive/reveal-block";
+import { KineticText } from "@/components/immersive/kinetic-text";
 
 /**
  * Maps MDX elements to the immersive editorial styling. Required at the repo
@@ -15,11 +17,12 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
      * without import.
      */
     Lead: ({ children }: { children: React.ReactNode }) => (
-      <RevealBlock>
-        <p className="lead mt-5 max-w-[30ch] font-display text-2xl leading-snug tracking-tight text-fg sm:text-3xl">
-          {children}
-        </p>
-      </RevealBlock>
+      // The scroll writes the takeaway in, word by word — the same kinetic
+      // signature as the home. Leads are authored as plain text.
+      <KineticText
+        text={Children.toArray(children).join("")}
+        className="lead mt-5 max-w-[30ch] font-display text-2xl leading-snug tracking-tight text-fg sm:text-3xl"
+      />
     ),
     h2: (props) => (
       <RevealBlock>
