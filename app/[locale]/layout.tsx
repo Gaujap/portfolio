@@ -38,8 +38,9 @@ export async function generateMetadata({
 }
 
 // Runs before first paint: marks JS as available (so scroll-reveal can hide its
-// initial state) and applies the persisted/system theme — avoiding any flash.
-const bootScript = `(function(){var e=document.documentElement;e.classList.add('js');try{var s=localStorage.getItem('theme');var d=s?s==='dark':window.matchMedia('(prefers-color-scheme: dark)').matches;if(d)e.classList.add('dark');}catch(_){}})();`;
+// initial state) and applies the persisted theme — avoiding any flash.
+// The site is dark by default: only a stored "light" preference opts out.
+const bootScript = `(function(){var e=document.documentElement;e.classList.add('js');try{if(localStorage.getItem('theme')!=='light')e.classList.add('dark');}catch(_){e.classList.add('dark');}})();`;
 
 export default async function LocaleLayout({
   children,
