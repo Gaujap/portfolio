@@ -65,7 +65,7 @@ touch `/components`.
 1. Add one object to the array in **`content/projects.ts`**. TypeScript will
    tell you if you miss a field (that's intentional — `slug`, `name`, `period`,
    `tagline`, `summary`, `stack`, `primaryAngle`, `angles`, `links`,
-   `isPrivate`, `hasWriteup`, `featured` are all required).
+   `isPrivate`, `hasWriteup` are all required).
 
    The `angles` field is the reframing mechanism. Give it an entry per angle the
    project supports — each with its own `headline`, `summary`, and highlighted
@@ -90,7 +90,8 @@ touch `/components`.
    follow: Problem → Constraints → Approach → What shipped → What I'd do
    differently.
 
-3. `featured: true` surfaces it in the home "Selected work" section.
+3. The home carousel shows **every** project, in array order — reorder the
+   array to reorder the stage.
 
 ### Add or change a UI string
 

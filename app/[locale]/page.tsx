@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Section, Container, Reveal, Eyebrow, Heading, Button } from "@/components/ui";
 import { AngleCard } from "@/components/angle-card";
-import { ProjectCard } from "@/components/project-card";
+import { ProjectCarousel } from "@/components/project-carousel";
 import { Contact } from "@/components/contact";
 import { pageMetadata } from "@/lib/seo";
 import { t, type Locale } from "@/lib/i18n";
@@ -9,7 +9,7 @@ import { ui } from "@/content/ui";
 import { site } from "@/content/site";
 import { seo } from "@/content/seo";
 import { ANGLES } from "@/content/types";
-import { featuredProjects } from "@/content/projects";
+import { projects } from "@/content/projects";
 
 export async function generateMetadata({
   params,
@@ -72,18 +72,11 @@ export default async function Home({
         </Section>
       </Reveal>
 
-      {/* Selected work — angle-neutral framing. */}
+      {/* Selected work — the stage: every project, one at a time. */}
       <Reveal>
         <Section labelledBy="work-eyebrow" className="border-t border-line">
           <Container>
-            <Eyebrow id="work-eyebrow" as="h2">
-              {t(ui.sections.selectedWork, locale)}
-            </Eyebrow>
-            <div className="mt-8 space-y-12">
-              {featuredProjects.map((project) => (
-                <ProjectCard key={project.slug} project={project} locale={locale} />
-              ))}
-            </div>
+            <ProjectCarousel projects={projects} locale={locale} />
           </Container>
         </Section>
       </Reveal>
