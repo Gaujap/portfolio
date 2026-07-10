@@ -40,6 +40,10 @@ export const ui = {
       fr: "Pipeline vocal Hermes : mot d'activation vers reconnaissance vocale vers LLM vers synthèse vocale Piper, avec un modèle Qwen en local et un repli cloud Claude Haiku.",
     },
   },
+  carousel: {
+    previous: { en: "Previous project", fr: "Projet précédent" },
+    next: { en: "Next project", fr: "Projet suivant" },
+  },
   labels: {
     private: { en: "Private", fr: "Privé" },
     inProduction: { en: "In production", fr: "En production" },

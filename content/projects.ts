@@ -67,7 +67,6 @@ export const projects: Project[] = [
     links: [],
     isPrivate: true,
     hasWriteup: true,
-    featured: true,
   },
   {
     slug: "vybe",
@@ -132,7 +131,6 @@ export const projects: Project[] = [
     links: [],
     isPrivate: true,
     hasWriteup: true,
-    featured: true,
   },
   {
     slug: "notion-mcp-pipeline",
@@ -176,7 +174,6 @@ export const projects: Project[] = [
     links: [],
     isPrivate: true,
     hasWriteup: true,
-    featured: false,
   },
   {
     slug: "hybrid-network",
@@ -232,7 +229,6 @@ export const projects: Project[] = [
     links: [],
     isPrivate: false,
     hasWriteup: true,
-    featured: true,
   },
   {
     slug: "ski-theatre-scheduling",
@@ -268,15 +264,11 @@ export const projects: Project[] = [
     links: [],
     isPrivate: false,
     hasWriteup: true,
-    featured: false,
   },
 ];
 
 /** Slugs in display order — the manifest that drives /work/[slug] routing. */
 export const PROJECT_SLUGS = projects.map((project) => project.slug);
-
-/** Projects surfaced on the home page's "selected work", in order. */
-export const featuredProjects = projects.filter((project) => project.featured);
 
 /** Projects that support a given angle, in display order. */
 export function projectsForAngle(angle: Project["primaryAngle"]) {
