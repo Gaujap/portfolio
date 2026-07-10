@@ -3,12 +3,13 @@ import { ImageResponse } from "next/og";
 export const OG_SIZE = { width: 1200, height: 630 };
 export const OG_CONTENT_TYPE = "image/png";
 
-// The palette is hard-coded (OG images can't read CSS vars) to the light theme.
-const PAPER = "#FAF7F1";
-const INK = "#1A1714";
-const MUTED = "#5E564D";
-const RUST = "#B8442B";
-const LINE = "#E7E1D6";
+// The palette is hard-coded (OG images can't read CSS vars) to the dark theme —
+// the site's default — so social cards match what visitors actually see.
+const PAPER = "#17150F";
+const INK = "#E9E3D6";
+const MUTED = "#A79E90";
+const RUST = "#D9694C";
+const LINE = "#322E26";
 
 /**
  * Editorial OG card: an uppercase accent label, a large statement, and a

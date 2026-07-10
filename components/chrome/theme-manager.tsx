@@ -14,8 +14,8 @@ const useIsomorphicLayoutEffect =
  *
  * The boot script sets the theme before first paint, but a locale change
  * re-renders the layout's <html>, which can drop the imperatively-added `.dark`
- * class. This re-applies the stored (or system) theme on every pathname change,
- * before the browser paints — so switching language never flips the theme.
+ * class. This re-applies the stored theme (dark by default) on every pathname
+ * change, before the browser paints — so switching language never flips it.
  */
 export function ThemeManager() {
   const pathname = usePathname();
@@ -24,13 +24,10 @@ export function ThemeManager() {
     const root = document.documentElement;
     root.classList.add("js");
     try {
-      const stored = localStorage.getItem("theme");
-      const dark = stored
-        ? stored === "dark"
-        : window.matchMedia("(prefers-color-scheme: dark)").matches;
-      root.classList.toggle("dark", dark);
+      // Dark by default: only an explicit stored "light" opts out.
+      root.classList.toggle("dark", localStorage.getItem("theme") !== "light");
     } catch {
-      // localStorage/matchMedia unavailable — keep whatever the boot script set.
+      // localStorage unavailable — keep whatever the boot script set.
     }
   }, [pathname]);
 
