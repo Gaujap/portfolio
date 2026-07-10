@@ -52,7 +52,9 @@ export default async function AboutPage({
       <Reveal>
         <Section labelledBy="about-exp" className="border-t border-line">
           <Container>
-            <Eyebrow id="about-exp">{t(ui.sections.experience, locale)}</Eyebrow>
+            <Eyebrow id="about-exp" as="h2">
+              {t(ui.sections.experience, locale)}
+            </Eyebrow>
             <div className="mt-8">
               <ExperienceList items={experience} locale={locale} />
             </div>
@@ -63,7 +65,9 @@ export default async function AboutPage({
       <Reveal>
         <Section labelledBy="about-langs" className="border-t border-line">
           <Container>
-            <Eyebrow id="about-langs">{t(ui.sections.languages, locale)}</Eyebrow>
+            <Eyebrow id="about-langs" as="h2">
+              {t(ui.sections.languages, locale)}
+            </Eyebrow>
             <ul className="mt-6 space-y-2">
               {site.languages.map((entry) => (
                 <li key={entry.language.en} className="text-lg">
