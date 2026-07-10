@@ -6,13 +6,16 @@ export function Eyebrow({
   children,
   accent,
   className,
+  id,
 }: {
   children: ReactNode;
   accent?: boolean;
   className?: string;
+  id?: string;
 }) {
   return (
     <p
+      id={id}
       className={cn(
         "font-mono text-xs uppercase tracking-widest",
         accent ? "text-accent" : "text-muted",

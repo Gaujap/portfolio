@@ -1,0 +1,21 @@
+## Problem
+
+I run AI-assisted work across six active projects at once, and the coordination overhead was becoming the bottleneck — not the coding itself. The core problem was making an agent pick the right task and update the right state reliably, across all six, without me babysitting every step. Agents are genuinely capable at implementation but surprisingly unreliable at the boring bookkeeping around it, which is exactly where mistakes are most costly.
+
+## Constraints
+
+- **Agents are bad at complex property filtering.** Ask an agent to "find the next unblocked, unassigned, in-scope task" by reasoning over a pile of Notion properties and it will occasionally get it wrong — and a wrong task selection quietly poisons everything downstream.
+- **Task selection had to be deterministic.** I needed the "what do I work on next" decision to be a lookup, not a judgment call the agent re-derives (and re-fumbles) each time.
+- **Six projects, one workflow.** Whatever I built had to generalize across all six without per-project special-casing.
+
+## Approach
+
+I integrated **Claude Code** with **Notion** and the **GitHub MCP server**, then built a custom command suite covering the full loop: task intake, implementation, ripple-effect verification (catching what a change breaks elsewhere), and status sync back to Notion. The key insight was a **queue-table pattern**: rather than asking the agent to filter tasks by reasoning over many properties, a deliberate schema constraint in Notion maintains a queue where the next actionable item is unambiguous. That single design decision eliminated an entire class of agent failures — the agent no longer *decides* what's next, it *reads* what's next.
+
+## What shipped
+
+A working pipeline I use daily across six projects: the agent pulls the next task from the queue, implements it, runs a ripple-effect check for collateral damage, and syncs status back to Notion — all driven by the command suite. The queue-table pattern turned the flakiest part of the workflow into the most reliable, because it moved the hard filtering out of the agent's judgment and into the schema. It scaled across projects without bespoke logic per project.
+
+## What I'd do differently
+
+The honest reflection is about **where a human gate still belongs**. The queue-table pattern fixed *selection*, but it also made the pipeline smooth enough that I started trusting the agent past the point where it had earned it — particularly on the ripple-effect verification, which is exactly the kind of judgment where being confidently wrong is worse than being slow. Ripple effects are semantic ("does this change break an assumption three files away?"), and the agent will sometimes report a clean check on something that genuinely broke. If I rebuilt it, I'd make the human gate explicit and non-optional at the ripple-verification boundary rather than something I *could* skip — the failure mode isn't the agent doing the wrong thing, it's me letting a smooth pipeline lull me into not looking.
