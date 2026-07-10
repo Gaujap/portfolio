@@ -33,6 +33,14 @@ const FRAG_LIFE_MAX_MS = 3400;
 const WANDER_SPEED = 75; // px/s
 const WAYPOINT_MIN_MS = 6000;
 const WAYPOINT_MAX_MS = 12000;
+/**
+ * Hunting: from afar it banks into a curved intercept (limited turn rate at
+ * moderate speed); only at close quarters — rocks raining right next to it —
+ * does it strike directly.
+ */
+const HUNT_SPEED = 160; // px/s
+const HUNT_TURN = 2.4; // rad/s
+const STRIKE_RANGE = 170; // px
 
 const MAX_ROCKS = 8;
 const MAX_FRAGS = 24;
@@ -105,6 +113,8 @@ export function ShipGuide() {
   const cruise = useRef<{ x: number; y: number } | null>(null);
   const waypoint = useRef({ x: 0, y: 0 });
   const waypointUntil = useRef(0);
+  /** Travel direction (radians) during curved intercepts. */
+  const bank = useRef(0);
   const seed = useRef(1);
 
   useEffect(() => {
@@ -268,6 +278,7 @@ export function ShipGuide() {
     );
 
     let prey: Rock | null = null;
+    let preyClose = false;
     const admiring = time < admireUntil.current;
 
     if (mode.current === "free" && !scrolling && !admiring && noticeable.length > 0) {
@@ -278,14 +289,38 @@ export function ShipGuide() {
           ? a
           : b,
       );
-      x.set(prey.x - 36);
-      y.set(prey.y);
-      const inRange = Math.hypot(prey.x - 36 - x.get(), prey.y - y.get()) < 30;
+      const preyDistance = Math.hypot(prey.x - x.get(), prey.y - y.get());
+      preyClose = preyDistance < STRIKE_RANGE;
+
+      if (!preyClose) {
+        // Curved intercept: bank toward the prey at a limited turn rate and
+        // moderate speed — an arc, never a beeline.
+        if (!cruise.current) {
+          cruise.current = { x: x.get(), y: y.get() };
+          bank.current = ((rotate.get() % 360) * Math.PI) / 180;
+        }
+        const here = cruise.current;
+        const desired = Math.atan2(prey.y - here.y, prey.x - here.x);
+        let turn = desired - bank.current;
+        turn = Math.atan2(Math.sin(turn), Math.cos(turn)); // shortest way
+        const maxTurn = (HUNT_TURN * delta) / 1000;
+        bank.current += Math.max(-maxTurn, Math.min(maxTurn, turn));
+        here.x += Math.cos(bank.current) * (HUNT_SPEED * delta) / 1000;
+        here.y += Math.sin(bank.current) * (HUNT_SPEED * delta) / 1000;
+        x.set(here.x);
+        y.set(here.y);
+        aimUntil.current = 0;
+      } else {
+        x.set(prey.x - 36);
+        y.set(prey.y);
+      }
+      const inRange =
+        preyClose && Math.hypot(prey.x - 36 - x.get(), prey.y - y.get()) < 30;
 
       if (inRange && aimUntil.current === 0) {
         aimUntil.current = time + AIM_MS; // hold... aim...
       } else if (!inRange) {
-        aimUntil.current = 0;
+        if (preyClose) aimUntil.current = 0;
       } else if (time >= aimUntil.current) {
         // Fire — laser from the nose to the rock, then admire the debris.
         if (laser.current) {
@@ -305,6 +340,7 @@ export function ShipGuide() {
         rocks.current = rocks.current.filter((rock) => rock !== prey);
         aimUntil.current = 0;
         admireUntil.current = time + ADMIRE_MS;
+        cruise.current = null; // wander re-seeds from the kill site
         prey = null;
       }
     } else if (mode.current !== "free" || scrolling) {
@@ -339,8 +375,9 @@ export function ShipGuide() {
       // A light sway on top of the cruise keeps it alive.
       x.set(here.x + Math.sin(time * 0.0006) * 10);
       y.set(here.y + Math.sin(time * 0.00084 + 2) * 8);
-    } else {
-      // Duty, hunt or admiration: the next free moment re-seeds the cruise.
+    } else if (mode.current !== "free") {
+      // Duty interrupts the cruise; the next free moment re-seeds it. (Hunts
+      // share the cruise position, so an intercept flows out of the wander.)
       cruise.current = null;
     }
 
@@ -382,9 +419,13 @@ export function ShipGuide() {
     const speed = Math.hypot(vx, vy);
     let heading: number | null = null;
     let turnRate = 0.1;
-    if (prey) {
+    if (prey && preyClose) {
+      // Locked on at close quarters.
       heading =
         (Math.atan2(prey.y - y.get(), prey.x - x.get()) * 180) / Math.PI;
+    } else if (prey) {
+      // Banking through the intercept arc: nose along the flight path.
+      heading = (bank.current * 180) / Math.PI;
     } else if (mode.current === "free" && !admiring && cruise.current) {
       // Nose toward the waypoint it's cruising to — lazy turns.
       heading =
