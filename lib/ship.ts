@@ -29,7 +29,10 @@ const listeners = new Set<Listener>();
  * (they briefly overlap during fast scrolls). When several channels are live,
  * the highest priority wins.
  */
-const channels = new Map<string, { priority: number; targets: ShipTarget[] }>();
+const channels = new Map<
+  string,
+  { priority: number; targets: ShipTarget[]; signature: string }
+>();
 
 const state = {
   targets: [] as ShipTarget[],
@@ -55,10 +58,17 @@ export const ship = {
   },
 
   publish(key: string, targets: ShipTarget[], priority = 0) {
-    channels.set(key, {
-      priority,
-      targets: [...targets].sort((a, b) => a.order - b.order),
-    });
+    const sorted = [...targets].sort((a, b) => a.order - b.order);
+    // Idempotent: re-publishing the same tour (same ids, same order) must NOT
+    // bump the version — observers often re-fire without anything changing,
+    // and a version bump would make the ship restart its tour forever.
+    const signature = sorted.map((t) => `${t.id}${t.park ? "!" : ""}`).join("|");
+    const existing = channels.get(key);
+    if (existing && existing.signature === signature && existing.priority === priority) {
+      existing.targets = sorted; // refresh closures, keep the version
+      return;
+    }
+    channels.set(key, { priority, targets: sorted, signature });
     recompute();
   },
 

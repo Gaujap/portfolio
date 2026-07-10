@@ -53,6 +53,8 @@ export const ui = {
     },
   },
   work: {
+    previousProject: { en: "Previous project", fr: "Projet précédent" },
+    nextProject: { en: "Next project", fr: "Projet suivant" },
     problem: { en: "Problem", fr: "Problème" },
     constraints: { en: "Constraints", fr: "Contraintes" },
     approach: { en: "Approach", fr: "Approche" },

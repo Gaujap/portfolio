@@ -1,8 +1,12 @@
 ## Problem
 
-I wanted an assistant that is genuinely mine — always available, and private by default. Most cloud assistants send every utterance and every intent to someone else's servers, which rules them out for anything I actually care about. My goal was a system where the model runs locally, voice control is reliable enough to trust hands-free, and the cloud is an opt-in fallback rather than the default path.
+<Lead>Private by default, hands-free, always on: a voice assistant whose brain runs on my own hardware, not someone else's cloud.</Lead>
+
+I wanted an assistant that is genuinely mine. Most cloud assistants send every utterance and every intent to someone else's servers, which rules them out for anything I actually care about. My goal was a system where the model runs locally, voice control is reliable enough to trust hands-free, and the cloud is an opt-in fallback rather than the default path.
 
 ## Constraints
+
+<Lead>A 14B model on a consumer AMD GPU, a strict end-to-end latency budget, and services that must survive reboots unattended.</Lead>
 
 - **Consumer hardware, not datacenter.** The model runs on an AMD **RX 7900 XTX** via **ROCm**, which is noticeably less mature than the CUDA ecosystem — driver quirks, fewer prebuilt wheels, and more manual tuning to get **Qwen 2.5 14B** stable at ~63 tok/s. {/* TODO: verify */}
 - **Latency budget.** A hands-free loop only feels usable if wake-word, transcription, inference, and speech synthesis stay under a tight combined budget, so every stage had to be fast on its own.
@@ -10,12 +14,18 @@ I wanted an assistant that is genuinely mine — always available, and private b
 
 ## Approach
 
+<Lead>A FastAPI orchestrator chains fully local voice components into systemd services, with one rule: 95% reliability on a few workflows before adding more.</Lead>
+
 The backend is **FastAPI**, exposing both REST and a **WebSocket** channel for streaming interactions, with a modular tool registry so capabilities can be added without touching the core. The voice pipeline is a chain of local components: **openWakeWord** for activation, **faster-whisper** for French STT, the LLM for reasoning, and **Piper** for TTS — each wired up as a **systemd** user service so the whole thing comes up on login. **Qwen 2.5 14B** runs locally with **Claude Haiku** as a cloud fallback for the cases where the local model isn't confident or capable enough. NFC tags hit a `/trigger` endpoint backed by an intent routing table that deliberately separates **direct intents** (fixed action, no ambiguity) from **contextual intents** (need interpretation). My guiding rule was reliability over breadth: reach 95% reliability on three or four workflows before adding a fifth.
 
 ## What shipped
 
-A working local-first orchestrator I use daily: hands-free voice control end to end, NFC-triggered automations via tap, and a graceful degradation path to the cloud when the local model falls short. The tool registry made it cheap to add new capabilities, and the systemd services mean it's just there — no manual startup. The discipline of deepening a handful of workflows instead of sprawling paid off in something I actually trust.
+<Lead>A daily driver, not a demo: voice end to end, NFC automations, and a cloud that only steps in when the local model taps out.</Lead>
+
+A working local-first orchestrator: hands-free voice control end to end, NFC-triggered automations via tap, and a graceful degradation path to the cloud when the local model falls short. The tool registry made it cheap to add new capabilities, and the systemd services mean it's just there — no manual startup. The discipline of deepening a handful of workflows instead of sprawling paid off in something I actually trust.
 
 ## What I'd do differently
+
+<Lead>The intent router should have been data, not code — and the boring reliability work constantly needs defending from the lure of new features.</Lead>
 
 The intent routing table grew organically, one `if` at a time, and it's now the part of the system I'm least happy with. What started as a clean split between direct and contextual intents has accumulated special cases that live in code rather than data — which means adding an intent is an edit-and-redeploy instead of a config change. I'd redesign it as a **declarative schema**: intents, their triggers, their routing, and their fallbacks described as data the router interprets, not as branching logic. The other honest tension is the pull toward adding a fifth and sixth workflow when the first four aren't yet at 95% — the interesting new thing is always more tempting than the boring reliability work, and I have to keep talking myself back into the boring work.

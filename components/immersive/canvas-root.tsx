@@ -16,11 +16,18 @@ const Scene = dynamic(() => import("./scene").then((m) => m.Scene), {
 });
 
 /**
- * Fixed full-viewport WebGL backdrop for the immersive home. Also feeds the
- * page's scroll progress into the shared scrollState the scene reads each
- * frame. Renders nothing under reduced motion — the site works without it.
+ * Fixed full-viewport WebGL backdrop. Also feeds the page's scroll progress
+ * into the shared scrollState the scene reads each frame. Work pages pass
+ * `fixedForm`/`presence` to lock the backdrop to their project's form.
+ * Renders nothing under reduced motion — the site works without it.
  */
-export function CanvasRoot() {
+export function CanvasRoot({
+  fixedForm,
+  presence,
+}: {
+  fixedForm?: number;
+  presence?: number;
+} = {}) {
   const reducedMotion = useReducedMotion();
   const [mounted, setMounted] = useState(false);
   const { scrollYProgress } = useScroll();
@@ -53,7 +60,7 @@ export function CanvasRoot() {
       className="pointer-events-none fixed inset-0 z-0"
       aria-hidden="true"
     >
-      <Scene />
+      <Scene fixedForm={fixedForm} presence={presence} />
     </motion.div>
   );
 }

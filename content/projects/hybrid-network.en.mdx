@@ -1,8 +1,12 @@
 ## Problem
 
-This was an academic project on the security track: design and validate a segmented, defensible two-site enterprise network. The goal wasn't just to make packets flow between two sites, but to build an architecture that assumes compromise — segmentation, controlled entry points, and enough observability to actually see what's happening. In other words, treat it as a network a security team would have to defend, not just one that works.
+<Lead>A security-track academic project: a two-site enterprise network designed on the assumption that it will be attacked.</Lead>
+
+The brief was to design and validate the full segmented architecture. The goal wasn't just to make packets flow between two sites, but to build an architecture that assumes compromise — segmentation, controlled entry points, and enough observability to actually see what's happening. In other words, treat it as a network a security team would have to defend, not just one that works.
 
 ## Constraints
+
+<Lead>No second site and no real WAN: everything beyond the first machine had to be simulated in nested KVM, within the timebox of a course.</Lead>
 
 - **No physical second site.** I had one machine, not two campuses, so the entire second site — and the WAN between them — had to live in **nested KVM**. That shapes what you can and can't validate.
 - **Academic scope and time.** This had to be a coherent, defensible design delivered within a course's constraints, not an open-ended infrastructure build.
@@ -10,12 +14,18 @@ This was an academic project on the security track: design and validate a segmen
 
 ## Approach
 
+<Lead>Everything hinges on controlled boundaries: two pfSense-guarded sites over a VPN, a DMZ, a single bastion path, and NetBox plus Elasticsearch keeping it all legible.</Lead>
+
 The foundation is **Proxmox** as the virtualization host, with **pfSense** handling routing and firewalling at each site and a **site-to-site VPN** joining them. Segmentation is the core of the design: a **DMZ** isolates public-facing services, and a **bastion host** is the single controlled path for administrative access into the internal segments. **NetBox** serves as the source of truth for documentation and IPAM, so the address plan and topology are recorded rather than tribal knowledge, and **Elasticsearch** aggregates logs so the network is observable rather than a black box. The whole two-site topology, including the second site, was prototyped under nested virtualization.
 
 ## What shipped
 
-A fully working two-site prototype: segmented networks with a DMZ and bastion, a functioning site-to-site VPN, IPAM and topology documented in NetBox, and centralized logging in Elasticsearch — all validated end to end under nested KVM. It demonstrates a defensible architecture you can reason about: where the trust boundaries are, how admin access is controlled, and how you'd observe an incident. As an academic deliverable it did its job of proving the design end to end.
+<Lead>A fully working two-site prototype, validated end to end under nested KVM — every security claim demonstrated, not asserted.</Lead>
+
+Segmented networks with a DMZ and bastion, a functioning site-to-site VPN, IPAM and topology documented in NetBox, and centralized logging in Elasticsearch. It demonstrates a defensible architecture you can reason about: where the trust boundaries are, how admin access is controlled, and how you'd observe an incident. As an academic deliverable it did its job of proving the design end to end.
 
 ## What I'd do differently
+
+<Lead>A zero-impairment virtual WAN and a log firehose validated less than they seemed — next time, degrade the link on purpose and design for detection signal first.</Lead>
 
 The honest limitation is everything **nested KVM structurally cannot capture**. The VPN worked flawlessly because the "WAN" between my two sites was a virtual switch with effectively zero latency, no jitter, and no packet loss — nothing like a real inter-site link, so I never had to confront MTU issues, tunnel behavior under loss, or reconnection edge cases that would absolutely appear over a real WAN. Nested virtualization also hides real NIC behavior — offloading, hardware quirks, throughput ceilings — so my performance picture was fictional. If I revisited it, I'd deliberately inject WAN impairment (latency, loss, constrained bandwidth) into the virtual link to make the validation mean something. The second thing I underinvested in was **logging signal-to-noise**: I shipped everything into Elasticsearch and called it observability, but a firehose of unfiltered logs isn't detection — I'd design what I'm actually looking for first, then log toward that.

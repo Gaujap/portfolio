@@ -169,18 +169,72 @@ html:not(.dark) body::after {
   }
 }
 
-.ship-beam {
-  background-image: repeating-linear-gradient(
-    to right,
-    var(--accent) 0 4px,
-    transparent 4px 8px
-  );
-  animation: ship-beam-flow 0.5s linear infinite;
-  transition: opacity 200ms ease;
+/*
+ * Halo on whatever the guide is presenting: the target brightens and an
+ * accent hairline draws itself underneath — unmissable, still no drawn line
+ * between ship and target.
+ */
+.guide-lit {
+  /* fit-content shrink-wraps the underline to the text without moving any
+     sibling — the halo must never perturb layout (it re-fired observers). */
+  position: relative;
+  width: fit-content;
+  text-shadow: 0 0 20px var(--accent);
+  filter: brightness(1.25);
 }
 
-@keyframes ship-beam-flow {
-  to {
-    background-position: 8px 0;
+.guide-lit::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -0.45em;
+  height: 1px;
+  width: 100%;
+  background: var(--accent);
+  box-shadow: 0 0 10px var(--accent);
+  transform-origin: left;
+  animation: guide-underline 420ms ease-out both;
+}
+
+@keyframes guide-underline {
+  from {
+    transform: scaleX(0);
   }
+}
+
+/* Asteroid-hunt props (idle patrol easter egg). Plain DOM, next to free. */
+.ship-asteroid {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 18px;
+  height: 18px;
+  border: 1.5px solid color-mix(in oklab, var(--accent) 80%, var(--fg));
+  box-shadow:
+    0 0 9px color-mix(in oklab, var(--accent) 45%, transparent),
+    inset 0 0 5px color-mix(in oklab, var(--accent) 35%, transparent);
+  clip-path: polygon(30% 0, 80% 10%, 100% 55%, 70% 100%, 20% 90%, 0 40%);
+  opacity: 0;
+  transition: opacity 300ms ease;
+}
+
+.ship-laser {
+  position: fixed;
+  height: 1.5px;
+  transform-origin: 0 50%;
+  background: linear-gradient(to right, var(--accent), transparent);
+  opacity: 0;
+  transition: opacity 140ms ease;
+}
+
+.ship-fragment {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 8px;
+  height: 8px;
+  border: 1px solid var(--accent);
+  box-shadow: 0 0 7px color-mix(in oklab, var(--accent) 60%, transparent);
+  clip-path: polygon(50% 0, 100% 100%, 0 80%);
+  opacity: 0;
 }
