@@ -170,12 +170,34 @@ html:not(.dark) body::after {
 }
 
 /*
- * Halo on whatever the guide is presenting — the connection reads through
- * light and proximity, not a drawn line.
+ * Halo on whatever the guide is presenting: the target brightens and an
+ * accent hairline draws itself underneath — unmissable, still no drawn line
+ * between ship and target.
  */
 .guide-lit {
-  text-shadow: 0 0 16px color-mix(in oklab, var(--accent) 60%, transparent);
-  transition: text-shadow 500ms ease;
+  position: relative;
+  display: inline-block;
+  text-shadow: 0 0 20px var(--accent);
+  filter: brightness(1.25);
+}
+
+.guide-lit::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -0.45em;
+  height: 1px;
+  width: 100%;
+  background: var(--accent);
+  box-shadow: 0 0 10px var(--accent);
+  transform-origin: left;
+  animation: guide-underline 420ms ease-out both;
+}
+
+@keyframes guide-underline {
+  from {
+    transform: scaleX(0);
+  }
 }
 
 /* Asteroid-hunt props (idle patrol easter egg). Plain DOM, next to free. */
@@ -183,11 +205,12 @@ html:not(.dark) body::after {
   position: fixed;
   left: 0;
   top: 0;
-  width: 13px;
-  height: 13px;
-  border: 1px solid var(--muted);
+  width: 17px;
+  height: 17px;
+  border: 1.5px solid color-mix(in oklab, var(--accent) 45%, var(--muted));
   clip-path: polygon(30% 0, 80% 10%, 100% 55%, 70% 100%, 20% 90%, 0 40%);
   opacity: 0;
+  transition: opacity 300ms ease;
 }
 
 .ship-laser {
@@ -202,8 +225,8 @@ html:not(.dark) body::after {
   position: fixed;
   left: 0;
   top: 0;
-  width: 5px;
-  height: 5px;
+  width: 7px;
+  height: 7px;
   border: 1px solid var(--accent);
   clip-path: polygon(50% 0, 100% 100%, 0 80%);
   opacity: 0;

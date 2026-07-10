@@ -10,19 +10,22 @@ import {
 } from "framer-motion";
 import { ship, type ShipTarget } from "@/lib/ship";
 
-/** How long the ship studies each point before moving on. */
-const DWELL_MS = 2400;
-/** Grace period after targets change before a new tour starts (fast-scroll guard). */
-const SETTLE_MS = 450;
+/** How long the ship presents a point before returning to its life. */
+const PRESENT_MS = 2000;
+/** Parking spots (CTAs) get a little longer. */
+const PARK_MS = 3200;
+/** How long after the last scroll movement the reader counts as settled. */
+const SCROLL_QUIET_MS = 280;
 /** Close enough to a target to count as arrived. */
 const ARRIVAL_PX = 12;
-/** How long after the last scroll movement the ship considers you settled. */
-const SCROLL_QUIET_MS = 320;
-/** Idle patrol time before an asteroid may wander in. */
-const ASTEROID_MIN_MS = 6000;
-const ASTEROID_MAX_MS = 14000;
+/** Idle time between asteroid visits. */
+const ASTEROID_MIN_MS = 7000;
+const ASTEROID_MAX_MS = 15000;
+/** The ship takes a beat to aim before firing — so you can watch it work. */
+const AIM_MS = 380;
+const BOOM_MS = 900;
 
-type Mode = "drift" | "settle" | "tour" | "parked";
+type Mode = "free" | "transit" | "present";
 
 interface Asteroid {
   x: number;
@@ -33,13 +36,16 @@ interface Asteroid {
 }
 
 /**
- * The ship guide. Its manners, in order:
- * - It tours published targets and parks; while you scroll it holds its spot
- *   on screen and lets the page flow underneath — it only glides (once) when
- *   YOU settle. No frame-by-frame chasing, no nose-flipping.
- * - Arrival is shown by lighting the target (halo), not by drawing lines.
- * - With nothing to do it patrols lazily — and now and then an asteroid
- *   drifts by, and it does what ships do.
+ * The ship guide, third edition. Its life:
+ * - By default it's FREE: lazy patrol, and when an asteroid drifts by, it
+ *   stalks it, takes aim, and fires — slowly enough to watch.
+ * - When the reader settles and there's something new to show, duty calls:
+ *   it flies over (transit), presents the point ~2s (halo lights via the
+ *   target's focus callback), moves to the next, and when the tour is done it
+ *   returns to its life. Each published tour is shown once.
+ * - Scrolling never makes it chase anything: any scroll aborts the tour and
+ *   frees it; settling re-runs whatever wasn't fully shown.
+ * - Asteroids drift through regardless, but it only hunts when free.
  * Desktop-only, absent under reduced motion.
  */
 export function ShipGuide() {
@@ -56,17 +62,18 @@ export function ShipGuide() {
   const fragmentEls = useRef<Array<HTMLSpanElement | null>>([]);
 
   // Flight state lives in refs — the loop runs at 60fps without re-renders.
-  const mode = useRef<Mode>("drift");
+  const mode = useRef<Mode>("free");
   const version = useRef(-1);
+  const shownVersion = useRef(-1);
   const stop = useRef(0);
-  const dwellUntil = useRef(0);
-  const settleUntil = useRef(0);
+  const presentUntil = useRef(0);
   const focused = useRef<ShipTarget | null>(null);
   const lastScrollY = useRef(0);
   const scrollQuietAt = useRef(0);
-  // Asteroid hunt (drift-mode easter egg).
+  // The asteroid lives independently of duty.
   const asteroid = useRef<Asteroid | null>(null);
   const nextAsteroidAt = useRef(0);
+  const aimUntil = useRef(0);
   const boomUntil = useRef(0);
   const boomAt = useRef({ x: 0, y: 0 });
   const seed = useRef(1);
@@ -75,148 +82,172 @@ export function ShipGuide() {
     setEnabled(window.matchMedia("(min-width: 1024px) and (hover: hover)").matches);
   }, []);
 
-  // Deterministic-enough pseudo-random for spawn variety.
   const rand = () => {
     seed.current = (seed.current * 16807) % 2147483647;
     return seed.current / 2147483647;
+  };
+
+  const release = () => {
+    focused.current?.blur?.();
+    focused.current = null;
+    mode.current = "free";
   };
 
   useAnimationFrame((time, delta) => {
     if (!enabled) return;
     const registry = ship.read();
 
-    // "Settled" means the page hasn't moved for a beat.
+    // Settled = the page hasn't meaningfully moved for a beat.
     const scrollYNow = window.scrollY;
-    if (Math.abs(scrollYNow - lastScrollY.current) > 2) {
+    if (Math.abs(scrollYNow - lastScrollY.current) > 4) {
       scrollQuietAt.current = time + SCROLL_QUIET_MS;
     }
     lastScrollY.current = scrollYNow;
     const scrolling = time < scrollQuietAt.current;
 
-    // Any registry change cancels the current tour — cleanly.
+    // New targets invalidate whatever was being shown.
     if (registry.version !== version.current) {
       version.current = registry.version;
-      focused.current?.blur?.();
-      focused.current = null;
       stop.current = 0;
-      if (registry.targets.length > 0 && !registry.userBusy) {
-        mode.current = "settle";
-        settleUntil.current = time + SETTLE_MS;
-      } else {
-        mode.current = "drift";
-        nextAsteroidAt.current =
-          time + ASTEROID_MIN_MS + rand() * (ASTEROID_MAX_MS - ASTEROID_MIN_MS);
-      }
+      release();
     }
 
-    if (mode.current === "settle" && time >= settleUntil.current && !scrolling) {
-      mode.current = "tour";
+    // Scrolling frees the ship instantly — it lives its life while you move.
+    if (scrolling && mode.current !== "free") {
+      stop.current = 0;
+      release();
     }
 
-    if (mode.current === "tour" || mode.current === "parked") {
+    // Duty: something new to show, and the reader is settled.
+    const hasDuty =
+      registry.targets.length > 0 &&
+      !registry.userBusy &&
+      shownVersion.current !== registry.version;
+
+    if (!scrolling && hasDuty && mode.current === "free") {
+      mode.current = "transit";
+    }
+
+    if (mode.current === "transit" || mode.current === "present") {
       const target = registry.targets[stop.current];
       if (!target) {
-        mode.current = "drift";
-      } else if (!scrolling) {
-        // Only follow the page when the reader is settled — while scrolling
-        // the ship holds its screen position and lets the content flow past.
+        shownVersion.current = registry.version;
+        release();
+      } else {
         const rect = target.getRect();
         if (!rect) {
           stop.current++;
-          return;
-        }
-        const tx = rect.left - 30;
-        const ty = rect.top + rect.height / 2;
-        x.set(tx);
-        y.set(ty);
+        } else {
+          const tx = rect.left - 30;
+          const ty = rect.top + rect.height / 2;
+          x.set(tx);
+          y.set(ty);
 
-        if (mode.current === "tour") {
-          const arrived = Math.hypot(tx - x.get(), ty - y.get()) < ARRIVAL_PX;
-          if (arrived && focused.current !== target) {
+          if (mode.current === "transit") {
+            const arrived = Math.hypot(tx - x.get(), ty - y.get()) < ARRIVAL_PX;
+            if (arrived) {
+              focused.current = target;
+              target.focus?.();
+              presentUntil.current = time + (target.park ? PARK_MS : PRESENT_MS);
+              mode.current = "present";
+            }
+          } else if (time >= presentUntil.current) {
+            // Shown long enough — on to the next point, or back to its life.
             focused.current?.blur?.();
-            focused.current = target;
-            target.focus?.();
-            dwellUntil.current = time + DWELL_MS;
-            if (target.park) mode.current = "parked";
-          } else if (arrived && time >= dwellUntil.current) {
+            focused.current = null;
             stop.current++;
+            if (stop.current >= registry.targets.length) {
+              shownVersion.current = registry.version;
+              mode.current = "free";
+            } else {
+              mode.current = "transit";
+            }
           }
         }
-      } else {
-        // Keep the tour clock generous while scrolling so it resumes calmly.
-        dwellUntil.current = Math.max(dwellUntil.current, time + 400);
       }
     }
 
-    let driftHeading: number | null = null;
+    /* --- The asteroid lives its own life, whatever the ship is doing. --- */
+    if (nextAsteroidAt.current === 0) {
+      nextAsteroidAt.current =
+        time + ASTEROID_MIN_MS + rand() * (ASTEROID_MAX_MS - ASTEROID_MIN_MS);
+    }
+    if (!asteroid.current && time >= nextAsteroidAt.current) {
+      asteroid.current = {
+        x: window.innerWidth + 24,
+        y: window.innerHeight * (0.3 + rand() * 0.5),
+        vx: -(15 + rand() * 10), // slow enough to watch
+        vy: (rand() - 0.5) * 12,
+        spin: rand() * 360,
+      };
+    }
+
+    const rock = asteroid.current;
     let hunting = false;
 
-    if (mode.current === "drift") {
-      const rock = asteroid.current;
+    if (rock) {
+      rock.x += (rock.vx * delta) / 1000;
+      rock.y += (rock.vy * delta) / 1000;
+      rock.spin += delta * 0.045;
+      if (asteroidEl.current) {
+        asteroidEl.current.style.opacity = "0.9";
+        asteroidEl.current.style.transform = `translate(${rock.x}px, ${rock.y}px) rotate(${rock.spin}deg)`;
+      }
 
-      if (rock) {
-        // Advance the asteroid; the ship gives chase.
-        rock.x += (rock.vx * delta) / 1000;
-        rock.y += (rock.vy * delta) / 1000;
-        rock.spin += delta * 0.06;
-        if (asteroidEl.current) {
-          asteroidEl.current.style.opacity = "1";
-          asteroidEl.current.style.transform = `translate(${rock.x}px, ${rock.y}px) rotate(${rock.spin}deg)`;
-        }
+      const escaped =
+        rock.x < -40 || rock.x > window.innerWidth + 60 ||
+        rock.y < -40 || rock.y > window.innerHeight + 40;
+
+      if (escaped) {
+        // Got away — if the ship was busy presenting, it never even tried.
+        if (asteroidEl.current) asteroidEl.current.style.opacity = "0";
+        asteroid.current = null;
+        aimUntil.current = 0;
+        nextAsteroidAt.current =
+          time + ASTEROID_MIN_MS + rand() * (ASTEROID_MAX_MS - ASTEROID_MIN_MS);
+      } else if (mode.current === "free" && !scrolling) {
+        // Free and settled: the hunt is on — stalk, aim, fire.
         hunting = true;
-        x.set(rock.x - 34);
+        x.set(rock.x - 36);
         y.set(rock.y);
+        const inRange = Math.hypot(rock.x - 36 - x.get(), rock.y - y.get()) < 30;
 
-        const close = Math.hypot(rock.x - 34 - x.get(), rock.y - y.get()) < 26;
-        const escaped =
-          rock.x < -40 || rock.x > window.innerWidth + 40 ||
-          rock.y < -40 || rock.y > window.innerHeight + 40;
-
-        if (close || escaped) {
-          if (close && laser.current && asteroidEl.current) {
-            // One flash of laser, then the rock pops into fragments.
+        if (inRange && aimUntil.current === 0) {
+          aimUntil.current = time + AIM_MS; // hold... aim...
+        } else if (!inRange) {
+          aimUntil.current = 0;
+        } else if (time >= aimUntil.current) {
+          // Fire.
+          if (laser.current) {
             const el = laser.current;
-            el.style.left = `${x.get()}px`;
+            el.style.left = `${x.get() + 10}px`;
             el.style.top = `${y.get()}px`;
-            el.style.width = "30px";
+            el.style.width = `${Math.max(18, rock.x - x.get() - 12)}px`;
             el.style.opacity = "1";
             setTimeout(() => {
               el.style.opacity = "0";
-            }, 110);
-            boomAt.current = { x: rock.x, y: rock.y };
-            boomUntil.current = time + 550;
+            }, 150);
           }
+          boomAt.current = { x: rock.x, y: rock.y };
+          boomUntil.current = time + BOOM_MS;
           if (asteroidEl.current) asteroidEl.current.style.opacity = "0";
           asteroid.current = null;
+          aimUntil.current = 0;
           nextAsteroidAt.current =
             time + ASTEROID_MIN_MS + rand() * (ASTEROID_MAX_MS - ASTEROID_MIN_MS);
         }
       } else {
-        // Lazy patrol; heading from the path derivative (continuous by
-        // construction — the nose can never snap at a turnaround).
-        const cx = window.innerWidth * 0.82;
-        const cy = window.innerHeight * 0.72;
-        x.set(cx + Math.sin(time * 0.00042) * 90);
-        y.set(cy + Math.sin(time * 0.00061 + 1.4) * 55);
-        const dx = Math.cos(time * 0.00042) * 90 * 0.00042;
-        const dy = Math.cos(time * 0.00061 + 1.4) * 55 * 0.00061;
-        driftHeading = (Math.atan2(dy, dx) * 180) / Math.PI;
-
-        if (time >= nextAsteroidAt.current && nextAsteroidAt.current > 0) {
-          // A rock wanders in from the right edge of the patrol quarter.
-          asteroid.current = {
-            x: window.innerWidth + 20,
-            y: window.innerHeight * (0.45 + rand() * 0.4),
-            vx: -(26 + rand() * 22),
-            vy: (rand() - 0.5) * 18,
-            spin: rand() * 360,
-          };
-        }
+        aimUntil.current = 0;
       }
-    } else if (asteroidEl.current) {
-      // Duty calls — any live rock escapes unharmed.
-      asteroid.current = null;
-      asteroidEl.current.style.opacity = "0";
+    }
+
+    if (mode.current === "free" && !hunting) {
+      // Lazy patrol; heading from the path derivative (continuous by
+      // construction — the nose can never snap at a turnaround).
+      const cx = window.innerWidth * 0.82;
+      const cy = window.innerHeight * 0.72;
+      x.set(cx + Math.sin(time * 0.00042) * 90);
+      y.set(cy + Math.sin(time * 0.00061 + 1.4) * 55);
     }
 
     // Fragments of the last popped asteroid scatter and fade.
@@ -224,28 +255,30 @@ export function ShipGuide() {
     fragmentEls.current.forEach((el, i) => {
       if (!el) return;
       if (boomLeft > 0) {
-        const k = 1 - boomLeft / 550;
+        const k = 1 - boomLeft / BOOM_MS;
         const angle = (i / fragmentEls.current.length) * Math.PI * 2 + 0.6;
-        el.style.opacity = String(0.85 * (1 - k));
-        el.style.transform = `translate(${boomAt.current.x + Math.cos(angle) * 34 * k}px, ${
-          boomAt.current.y + Math.sin(angle) * 34 * k
-        }px) rotate(${k * 200}deg)`;
+        el.style.opacity = String(0.9 * (1 - k * k));
+        el.style.transform = `translate(${
+          boomAt.current.x + Math.cos(angle) * 46 * k
+        }px, ${boomAt.current.y + Math.sin(angle) * 46 * k}px) rotate(${k * 240}deg) scale(${1 - k * 0.5})`;
       } else {
         el.style.opacity = "0";
       }
     });
 
-    // Heading rules: analytic while patrolling, velocity only during real
-    // flight, frozen while the reader scrolls, easing level when perched.
+    // Heading: analytic while patrolling, velocity in real flight, level when
+    // presenting, frozen while the reader scrolls.
     const vx = x.getVelocity();
     const vy = y.getVelocity();
     const speed = Math.hypot(vx, vy);
     let heading: number | null = null;
-    if (driftHeading !== null) {
-      heading = driftHeading;
+    if (mode.current === "free" && !hunting) {
+      const dx = Math.cos(time * 0.00042) * 90 * 0.00042;
+      const dy = Math.cos(time * 0.00061 + 1.4) * 55 * 0.00061;
+      heading = (Math.atan2(dy, dx) * 180) / Math.PI;
     } else if (hunting || (!scrolling && speed > 200)) {
       heading = (Math.atan2(vy, vx) * 180) / Math.PI;
-    } else if (!scrolling && (mode.current === "tour" || mode.current === "parked")) {
+    } else if (!scrolling && mode.current === "present") {
       heading = 0;
     }
     if (heading !== null) {
@@ -291,11 +324,11 @@ export function ShipGuide() {
         </span>
       </motion.div>
 
-      {/* Asteroid-hunt props: one rock, one laser, a few fragments. */}
+      {/* Asteroid-hunt props: one rock, one laser, a handful of fragments. */}
       <span aria-hidden="true" className="pointer-events-none fixed left-0 top-0 z-[54]">
         <span ref={asteroidEl} className="ship-asteroid" />
         <span ref={laser} className="ship-laser" />
-        {Array.from({ length: 3 }, (_, i) => (
+        {Array.from({ length: 5 }, (_, i) => (
           <span
             key={i}
             ref={(el) => {

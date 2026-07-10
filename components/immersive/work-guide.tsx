@@ -32,16 +32,19 @@ export function WorkGuide() {
       lit = element;
     };
 
-    const perch = (element: HTMLElement, id: string) => {
-      light(element);
+    // The halo lights when the ship ARRIVES (focus), not when the section
+    // changes — the light and the visit are one gesture.
+    const perch = (element: HTMLElement, id: string, park = false) => {
       ship.publish(
         "work",
         [
           {
             id,
             order: 0,
-            park: true,
+            park,
             getRect: () => element.getBoundingClientRect(),
+            focus: () => light(element),
+            blur: () => light(null),
           },
         ],
         15,
@@ -53,7 +56,7 @@ export function WorkGuide() {
       if (nextLink) {
         const rect = nextLink.getBoundingClientRect();
         if (rect.top < window.innerHeight * 0.9 && rect.bottom > 0) {
-          perch(nextLink, "work-next");
+          perch(nextLink, "work-next", true);
           return;
         }
       }
