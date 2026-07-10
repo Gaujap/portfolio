@@ -109,4 +109,24 @@
     opacity: 1;
     transform: none;
   }
+
+  /*
+   * Hermes diagram signature trace. Hidden (undrawn) only when JS + motion are
+   * available; it draws once when the diagram scrolls into view. Otherwise the
+   * accent line is simply drawn, so the diagram is always complete.
+   */
+  html.js .hermes-trace {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+  }
+
+  html.js .hermes-diagram[data-animate="true"] .hermes-trace {
+    animation: hermes-draw 1.4s ease-out forwards;
+  }
+}
+
+@keyframes hermes-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
 }

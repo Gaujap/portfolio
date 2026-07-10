@@ -1,0 +1,21 @@
+## Problème
+
+Je mène du travail assisté par IA sur six projets actifs en parallèle, et c'est la coordination qui devenait le goulot d'étranglement — pas le code lui-même. Le problème central : faire en sorte qu'un agent choisisse la bonne tâche et mette à jour le bon état de façon fiable, sur les six projets, sans que j'aie à surveiller chaque étape. Les agents sont réellement compétents pour l'implémentation, mais étonnamment peu fiables sur la paperasse ennuyeuse qui l'entoure — précisément là où les erreurs coûtent le plus cher.
+
+## Contraintes
+
+- **Les agents sont mauvais au filtrage complexe de propriétés.** Demandez à un agent de « trouver la prochaine tâche non bloquée, non assignée et dans le périmètre » en raisonnant sur une pile de propriétés Notion, et il se trompera de temps en temps — et un mauvais choix de tâche empoisonne silencieusement tout ce qui suit.
+- **La sélection de tâche devait être déterministe.** Il me fallait que la décision « sur quoi je travaille ensuite » soit une simple lecture, pas un jugement que l'agent re-dérive (et re-rate) à chaque fois.
+- **Six projets, un seul workflow.** Ce que je construirais devait se généraliser aux six sans traitement particulier projet par projet.
+
+## Approche
+
+J'ai intégré **Claude Code** avec **Notion** et le **serveur MCP GitHub**, puis construit une suite de commandes couvrant toute la boucle : prise en charge des tâches, implémentation, vérification des effets de bord (repérer ce qu'un changement casse ailleurs), et synchronisation du statut vers Notion. L'idée clé, c'est un **pattern de table-file d'attente** : plutôt que de demander à l'agent de filtrer les tâches en raisonnant sur de multiples propriétés, une contrainte de schéma délibérée dans Notion maintient une file où le prochain élément actionnable est sans ambiguïté. Cette seule décision de conception a éliminé toute une classe d'échecs de l'agent — l'agent ne *décide* plus ce qui vient ensuite, il le *lit*.
+
+## Ce qui a été livré
+
+Un pipeline opérationnel que j'utilise au quotidien sur six projets : l'agent tire la prochaine tâche de la file, l'implémente, lance une vérification des effets de bord pour les dommages collatéraux, et resynchronise le statut vers Notion — le tout piloté par la suite de commandes. Le pattern de table-file a transformé la partie la plus instable du workflow en la plus fiable, parce qu'il a sorti le filtrage difficile du jugement de l'agent pour le placer dans le schéma. Il a passé à l'échelle sur tous les projets sans logique sur mesure.
+
+## Ce que je referais autrement
+
+La réflexion honnête porte sur **là où une validation humaine a encore sa place**. Le pattern de table-file a réglé la *sélection*, mais il a aussi rendu le pipeline assez fluide pour que je me mette à faire confiance à l'agent au-delà de ce qu'il avait mérité — en particulier sur la vérification des effets de bord, exactement le genre de jugement où se tromper avec assurance est pire que d'être lent. Les effets de bord sont sémantiques (« ce changement casse-t-il une hypothèse trois fichiers plus loin ? »), et l'agent rapporte parfois une vérification propre sur quelque chose qui a réellement cassé. Si je le reconstruisais, je rendrais la validation humaine explicite et non optionnelle à la frontière de la vérification des effets de bord, plutôt qu'une étape que je *pouvais* sauter — le mode d'échec n'est pas l'agent qui fait une bêtise, c'est moi qui laisse un pipeline fluide m'endormir au point de ne plus regarder.
