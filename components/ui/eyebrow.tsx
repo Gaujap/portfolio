@@ -7,14 +7,17 @@ export function Eyebrow({
   accent,
   className,
   id,
+  as: Tag = "p",
 }: {
   children: ReactNode;
   accent?: boolean;
   className?: string;
   id?: string;
+  /** Use "h2" when the eyebrow is a section title, for a correct heading outline. */
+  as?: "p" | "h2";
 }) {
   return (
-    <p
+    <Tag
       id={id}
       className={cn(
         "font-mono text-xs uppercase tracking-widest",
@@ -23,6 +26,6 @@ export function Eyebrow({
       )}
     >
       {children}
-    </p>
+    </Tag>
   );
 }
