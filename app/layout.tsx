@@ -14,12 +14,10 @@ export const metadata: Metadata = {
   metadataBase: new URL(site.url),
 };
 
-// Match the theme toggle: warm paper (light) / warm dark grey (dark) chrome.
+// The site is dark by default (regardless of system preference), so the
+// browser chrome matches the warm dark stage.
 export const viewport: Viewport = {
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#FAF7F1" },
-    { media: "(prefers-color-scheme: dark)", color: "#17150F" },
-  ],
+  themeColor: "#17150F",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
