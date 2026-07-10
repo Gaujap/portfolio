@@ -104,6 +104,7 @@ export function ShipGuide() {
   const frags = useRef<Fragment[]>([]);
   const nextSpawnAt = useRef(0);
   const showerLeft = useRef(0);
+  const showerEdge = useRef(0);
   const nextShowerDropAt = useRef(0);
   const aimUntil = useRef(0);
   const admireUntil = useRef(0);
@@ -132,14 +133,30 @@ export function ShipGuide() {
     mode.current = "free";
   };
 
-  const spawnRock = (shower: boolean) => {
+  /** Rocks come in from any edge, aimed inward; a shower shares one edge. */
+  const spawnRock = (shower: boolean, edge?: number) => {
     if (rocks.current.length >= MAX_ROCKS) return;
+    const side = edge ?? Math.floor(rand() * 4); // 0 top, 1 right, 2 bottom, 3 left
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    const along = rand();
+    const speed = shower ? 28 + rand() * 16 : 15 + rand() * 10;
+    // Inward normal, scattered a little (showers rain more diagonally).
+    const scatter = (rand() - 0.5) * (shower ? 1.0 : 0.6);
+    const start =
+      side === 0
+        ? { x: w * along, y: -24, angle: Math.PI / 2 }
+        : side === 1
+          ? { x: w + 24, y: h * along, angle: Math.PI }
+          : side === 2
+            ? { x: w * along, y: h + 24, angle: -Math.PI / 2 }
+            : { x: -24, y: h * along, angle: 0 };
+    const angle = start.angle + scatter;
     rocks.current.push({
-      x: window.innerWidth + 24,
-      y: window.innerHeight * (shower ? 0.1 + rand() * 0.5 : 0.25 + rand() * 0.55),
-      // Showers rain through faster and more diagonally.
-      vx: shower ? -(28 + rand() * 16) : -(15 + rand() * 10),
-      vy: shower ? 10 + rand() * 14 : (rand() - 0.5) * 12,
+      x: start.x,
+      y: start.y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
       spin: rand() * 360,
       scale: 0.7 + rand() * 0.6,
     });
@@ -245,6 +262,7 @@ export function ShipGuide() {
     if (time >= nextSpawnAt.current) {
       if (rand() < SHOWER_CHANCE) {
         showerLeft.current = 4 + Math.floor(rand() * 4);
+        showerEdge.current = Math.floor(rand() * 4);
         nextShowerDropAt.current = time;
       } else {
         spawnRock(false);
@@ -253,7 +271,7 @@ export function ShipGuide() {
         time + SPAWN_MIN_MS + rand() * (SPAWN_MAX_MS - SPAWN_MIN_MS);
     }
     if (showerLeft.current > 0 && time >= nextShowerDropAt.current) {
-      spawnRock(true);
+      spawnRock(true, showerEdge.current);
       showerLeft.current--;
       nextShowerDropAt.current = time + 260 + rand() * 420;
     }
@@ -273,8 +291,8 @@ export function ShipGuide() {
     // happen where the visitor can watch it.
     const noticeable = rocks.current.filter(
       (rock) =>
-        rock.x < window.innerWidth - 140 && rock.x > 80 &&
-        rock.y > 60 && rock.y < window.innerHeight - 60,
+        rock.x > 100 && rock.x < window.innerWidth - 100 &&
+        rock.y > 70 && rock.y < window.innerHeight - 70,
     );
 
     let prey: Rock | null = null;
