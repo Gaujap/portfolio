@@ -30,11 +30,14 @@ export function Manifesto({
   stats,
   anglesLead,
   angleLinks,
+  linkBase,
 }: {
   lines: string[];
   stats: ManifestoStat[];
   anglesLead: string;
   angleLinks: AngleLink[];
+  /** Locale prefix for the `[[label->path]]` doors, e.g. `/en/`. */
+  linkBase: string;
 }) {
   const reducedMotion = useReducedMotion();
 
@@ -45,6 +48,7 @@ export function Manifesto({
           <KineticText
             key={line}
             text={line}
+            linkBase={linkBase}
             className="max-w-[26ch] font-display text-3xl leading-snug tracking-tight sm:text-5xl"
           />
         ))}
