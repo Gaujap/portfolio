@@ -6,6 +6,7 @@ import type { SiteConfig } from "@/content/types";
  */
 export const site = {
   name: "Gabriel Debarnot",
+  url: "https://gabrieldebarnot.gdtx.fr",
   role: {
     en: "Full-stack developer — AI systems",
     fr: "Développeur full-stack — systèmes d'IA",
