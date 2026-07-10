@@ -4,6 +4,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { Locale } from "@/lib/i18n";
 
+// Endonyms: the accessible name must contain the visible text ("en" ⊂ "English",
+// "fr" ⊂ "Français") to satisfy WCAG "Label in Name".
+const LANGUAGE_NAMES: Record<Locale, string> = {
+  en: "English",
+  fr: "Français",
+};
+
 /**
  * Switches locale while staying on the current page: swaps the leading path
  * segment and persists the choice to the `NEXT_LOCALE` cookie (the signal the
@@ -29,7 +36,8 @@ export function LanguageToggle({
       href={href}
       hrefLang={other}
       onClick={persist}
-      aria-label={label}
+      aria-label={LANGUAGE_NAMES[other]}
+      title={label}
       className="font-mono text-xs uppercase tracking-widest text-muted transition-colors hover:text-fg"
     >
       {other}
