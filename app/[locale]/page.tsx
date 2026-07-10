@@ -1,12 +1,30 @@
+import type { Metadata } from "next";
 import { Section, Container, Reveal, Eyebrow, Heading, Button } from "@/components/ui";
 import { AngleCard } from "@/components/angle-card";
 import { ProjectCard } from "@/components/project-card";
 import { Contact } from "@/components/contact";
+import { pageMetadata } from "@/lib/seo";
 import { t, type Locale } from "@/lib/i18n";
 import { ui } from "@/content/ui";
 import { site } from "@/content/site";
+import { seo } from "@/content/seo";
 import { ANGLES } from "@/content/types";
 import { featuredProjects } from "@/content/projects";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: Locale }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  return pageMetadata({
+    locale,
+    path: "",
+    title: t(seo.home.title, locale),
+    description: t(seo.home.description, locale),
+    absoluteTitle: true,
+  });
+}
 
 export default async function Home({
   params,
