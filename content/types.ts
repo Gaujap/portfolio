@@ -23,6 +23,15 @@ export interface AngleFraming {
   stack: string[];
 }
 
+/**
+ * One explorable data point on the home console: `label` is the short line a
+ * hotspot shows collapsed, `detail` the 1–2 lines revealed on hover/tap.
+ */
+export interface ProjectFact {
+  label: Localized;
+  detail: Localized;
+}
+
 export type ProjectLinkKind = "repo" | "live" | "writeup" | "external";
 
 export interface ProjectLink {
@@ -44,6 +53,8 @@ export interface Project {
   summary: Localized;
   /** Full stack; angle framings highlight a subset. */
   stack: string[];
+  /** Explorable data points on the home console (max 4 render as hotspots). */
+  facts: ProjectFact[];
   primaryAngle: Angle;
   /** Per-angle reframings. Only the angles this project supports are present. */
   angles: Partial<Record<Angle, AngleFraming>>;
