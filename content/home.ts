@@ -49,7 +49,7 @@ export const home: {
       prefix: "~",
       suffix: " tok/s",
       label: {
-        en: "local inference on a consumer GPU", // TODO: verify
+        en: "local inference on a consumer GPU",
         fr: "d'inférence locale sur GPU grand public",
       },
       detail: {
@@ -61,7 +61,7 @@ export const home: {
       value: 30,
       prefix: "~",
       label: {
-        en: "schools live through a zero-downtime migration", // TODO: verify
+        en: "schools live through a zero-downtime migration",
         fr: "écoles en production pendant une migration sans coupure",
       },
       detail: {

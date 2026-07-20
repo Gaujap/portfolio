@@ -8,7 +8,7 @@ Je voulais un assistant qui soit réellement le mien. La plupart des assistants 
 
 <Lead>Un modèle 14B sur un GPU AMD grand public, un budget de latence serré de bout en bout, et des services qui doivent survivre seuls aux redémarrages.</Lead>
 
-- **Du matériel grand public, pas un datacenter.** Le modèle tourne sur un AMD **RX 7900 XTX** via **ROCm**, nettement moins mature que l'écosystème CUDA — bizarreries de pilotes, moins de wheels précompilées, et beaucoup de réglages manuels pour stabiliser **Qwen 2.5 14B** autour de 63 tok/s. {/* TODO: verify */}
+- **Du matériel grand public, pas un datacenter.** Le modèle tourne sur un AMD **RX 7900 XTX** via **ROCm**, nettement moins mature que l'écosystème CUDA — bizarreries de pilotes, moins de wheels précompilées, et beaucoup de réglages manuels pour stabiliser **Qwen 2.5 14B** autour de 63 tok/s.
 - **Budget de latence.** Une boucle mains libres n'est agréable que si le mot-clé, la transcription, l'inférence et la synthèse vocale tiennent dans un budget cumulé serré, donc chaque étape devait être rapide en soi.
 - **Fonctionnement sans surveillance.** Ce n'est pas un script que je materne — il doit survivre aux redémarrages et tourner en tâche de fond, sans terminal ouvert.
 

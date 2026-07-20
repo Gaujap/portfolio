@@ -3,7 +3,6 @@ import type { Angle, Experience } from "@/content/types";
 /**
  * Roles, most recent first. `angles` controls which angle pages surface each
  * role. Checked with `satisfies Experience[]` — a missing field fails the build.
- * Dates marked `// TODO: verify`.
  */
 export const experience = [
   {
@@ -12,7 +11,7 @@ export const experience = [
       en: "Lead Developer — full-stack, AI, security",
       fr: "Lead Developer — full-stack, IA, sécurité",
     },
-    period: { en: "Since Mar 2026", fr: "Depuis mars 2026" }, // TODO: verify
+    period: { en: "Since Mar 2025", fr: "Depuis mars 2025" },
     current: true,
     summary: {
       en: "Creator-economy platform. Three-person team, equity holder.",
@@ -75,7 +74,7 @@ export const experience = [
   {
     company: "GDT — gdtx.fr",
     role: { en: "Founder", fr: "Fondateur" },
-    period: { en: "Since 2023", fr: "Depuis 2023" }, // TODO: verify
+    period: { en: "Since Oct 2025", fr: "Depuis octobre 2025" },
     current: true,
     summary: {
       en: "Web development for local institutions and AI consulting for SMEs. Diagnostic-first engagements.",

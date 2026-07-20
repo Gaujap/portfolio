@@ -8,14 +8,12 @@ import type { Project } from "@/content/types";
  * `angles` reframes the same project per entry point: the AI page shows a
  * project's `angles.ai` framing, the security page its `angles.security`, and
  * so on. `primaryAngle` is where the project leads.
- *
- * Dates and a few specifics are marked `// TODO: verify` — audit before launch.
  */
 export const projects: Project[] = [
   {
     slug: "hermes",
     name: "Hermes",
-    period: { en: "2024 — present", fr: "2024 — présent" }, // TODO: verify
+    period: { en: "2025 — present", fr: "2025 — présent" },
     role: {
       en: "Solo — architecture & implementation",
       fr: "Solo — architecture & implémentation",
@@ -41,7 +39,7 @@ export const projects: Project[] = [
     ],
     facts: [
       {
-        label: { en: "~63 tok/s local", fr: "~63 tok/s en local" }, // TODO: verify
+        label: { en: "~63 tok/s local", fr: "~63 tok/s en local" },
         detail: {
           en: "Qwen 2.5 14B on an RX 7900 XTX via ROCm — Claude Haiku only as fallback.",
           fr: "Qwen 2.5 14B sur RX 7900 XTX via ROCm — Claude Haiku seulement en repli.",
@@ -101,7 +99,7 @@ export const projects: Project[] = [
   {
     slug: "shelf",
     name: "Shelf",
-    period: { en: "2026 — present", fr: "2026 — présent" }, // TODO: verify
+    period: { en: "2026 — present", fr: "2026 — présent" },
     role: {
       en: "Solo — product, architecture & development",
       fr: "Solo — produit, architecture & développement",
@@ -190,7 +188,7 @@ export const projects: Project[] = [
   {
     slug: "vybe",
     name: "Vybe",
-    period: { en: "2026 — present", fr: "2026 — présent" }, // TODO: verify
+    period: { en: "2026 — present", fr: "2026 — présent" },
     role: { en: "Lead developer", fr: "Lead developer" },
     tagline: {
       en: "A creator-economy platform for the French market.",
@@ -284,7 +282,7 @@ export const projects: Project[] = [
   {
     slug: "domus",
     name: "Domus",
-    period: { en: "2026 — present", fr: "2026 — présent" }, // TODO: verify
+    period: { en: "2026 — present", fr: "2026 — présent" },
     role: {
       en: "Solo — architecture & full-stack development",
       fr: "Solo — architecture & développement full-stack",
@@ -381,7 +379,7 @@ export const projects: Project[] = [
   {
     slug: "cotae",
     name: "Cotae",
-    period: { en: "2026 — present", fr: "2026 — présent" }, // TODO: verify
+    period: { en: "2026 — present", fr: "2026 — présent" },
     role: {
       en: "Solo — product, architecture, iPad app & backend integration",
       fr: "Solo — produit, architecture, app iPad & intégration backend",
@@ -470,7 +468,7 @@ export const projects: Project[] = [
   {
     slug: "notion-mcp-pipeline",
     name: "Notion / MCP pipeline",
-    period: { en: "2025 — present", fr: "2025 — présent" }, // TODO: verify
+    period: { en: "2025 — present", fr: "2025 — présent" },
     role: { en: "Solo", fr: "Solo" },
     tagline: {
       en: "An agent engineering pipeline running across six projects.",
@@ -543,7 +541,7 @@ export const projects: Project[] = [
   {
     slug: "hybrid-network",
     name: "Hybrid network infrastructure",
-    period: { en: "2025", fr: "2025" }, // TODO: verify
+    period: { en: "2025", fr: "2025" },
     role: {
       en: "Academic project — security track",
       fr: "Projet académique — filière sécurité",
@@ -628,7 +626,7 @@ export const projects: Project[] = [
   {
     slug: "ski-theatre-scheduling",
     name: "Ski & theatre scheduling platform",
-    period: { en: "2025 — present", fr: "2025 — présent" }, // TODO: verify
+    period: { en: "2025 — 2027", fr: "2025 — 2027" },
     role: {
       en: "Principal engineer — apprenticeship, 2C2L",
       fr: "Ingénieur principal — alternance, 2C2L",
@@ -644,7 +642,7 @@ export const projects: Project[] = [
     stack: ["Vue 3", "Quasar", "Django", "REST API", "PostgreSQL"],
     facts: [
       {
-        label: { en: "~30 schools live", fr: "~30 écoles en production" }, // TODO: verify
+        label: { en: "~30 schools live", fr: "~30 écoles en production" },
         detail: {
           en: "Ski and theatre schools keep planning daily while the migration happens under them.",
           fr: "Les écoles de ski et de théâtre planifient chaque jour pendant la migration.",
