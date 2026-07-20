@@ -1,0 +1,31 @@
+## Le problème
+
+<Lead>Suivre cinq types de médias sur cinq applications différentes — et aucune ne recommande à travers les formats ni ne suit fiablement les sorties.</Lead>
+
+Les mangas dans une appli, les films dans une autre, les livres dans une troisième : une progression éparpillée, et rien qui relie les formats ni ne suit correctement les sorties de manhwa. AniList ne connaît pas mon Letterboxd, Goodreads ignore mes mangas, et aucune ne recommande *à travers* les formats. Je voulais un seul endroit privé pour tout ce que je lis et regarde, avec un assistant qui connaît réellement ma bibliothèque.
+
+## Contraintes
+
+<Lead>Une app personnelle mono-utilisateur — mais tenue à un niveau produit : de vrais catalogues, des données de sortie fiables et une latence assez basse pour paraître instantanée.</Lead>
+
+- **De vraies données, pas un jouet.** Les recommandations et le suivi s'appuient sur des catalogues réels — TMDB, AniList, Google Books — donc l'assistant doit chercher dans des sources que je ne possède pas encore, pas seulement relire ma propre bibliothèque.
+- **Aucune API de sortie parfaite.** Aucune source gratuite ne couvre proprement les dates de sortie manhwa {/* TODO: verify */}, donc le suivi doit rester juste même quand une source est fausse ou hors service.
+- **Latence.** Les recaps et le chat ne sont utilisables que s'ils sont streamés et rapides, ce qui dicte les choix de modèle plutôt que l'inverse.
+
+## Approche
+
+<Lead>Un compagnon Claude qui appelle de vrais catalogues, une cascade de sortie multi-sources résiliente, et une couche de streaming qui choisit le bon modèle pour la tâche.</Lead>
+
+Le cœur est un **compagnon IA** : un chat en streaming (**NDJSON**) qui appelle des outils pour chercher de vrais titres, comprend un **profil de goûts** persistant, recommande en s'en rapprochant ou en s'en éloignant, filtre par plateforme de streaming, relie **anime ↔ manga ↔ livre** et rend des cartes actionnables (ajouter / où regarder). Le suivi de sorties fait tourner une cascade **ComicK → MangaDex → MangaUpdates** avec garde-fous — sans jamais afficher un numéro inférieur à ce que tu as déjà lu — plus une estimation de cadence, pour des chapitres justes sans maintenance. Recaps et chat sont streamés, avec **Claude Haiku** par défaut pour la vitesse et **Sonnet** à la demande ; le thinking est désactivé pour réduire la latence, avec un fallback en cas de surcharge. En dessous : **Next.js 14** App Router avec RSC (`force-dynamic`) et Server Actions, un cœur **Prisma 7 / PostgreSQL**, **Supabase Auth** en allowlist, et un système visuel maison « liquid glass » avec palette de commandes et skeletons anti-CLS.
+
+## Ce qui a été livré
+
+<Lead>Environ seize sections en orbite autour d'un seul assistant : bibliothèque, découverte, calendrier, hub anime saisonnier, décideur « ce soir je regarde quoi » et mode à deux.</Lead>
+
+Un tracker privé qui fonctionne — home, bibliothèque, découverte, calendrier, stats, chat, un mode partagé « à deux », un hub anime saisonnier et des pages de détail : une seizaine de sections {/* TODO: verify */}, toutes servies par le compagnon. Recaps sans spoiler, décideur « ce soir je regarde quoi », scan de code-barres ISBN, calendrier des sorties avec export Google Agenda et notifications push complètent l'ensemble. C'est une app mono-utilisateur que j'utilise vraiment tous les jours, pas une démo.
+
+## Ce que je ferais différemment
+
+<Lead>La cascade multi-sources fait ses preuves — mais la couche de correspondance entre sources est là où se trouve le prochain travail de fiabilité.</Lead>
+
+La cascade de fournisseurs était le bon choix : la résilience valait mieux que parier sur une seule « meilleure » source. Mais la classe de bugs la plus tenace, ce sont les **mauvais numéros de chapitres dus à de mauvaises correspondances de titres** entre sources, corrigés par des garde-fous plutôt que résolus à la racine. J'investirais ensuite dans une couche d'identité inter-sources plus solide, pour qu'un titre se résolve en une entité canonique *avant* qu'un numéro soit considéré comme fiable. Je m'appuierais aussi davantage sur le magasin de goûts : y ancrer les recommandations et exclure les titres possédés ou écartés a réglé le problème du « il recommande ce que j'ai déjà », et il reste du signal à exploiter.

@@ -99,6 +99,95 @@ export const projects: Project[] = [
     hasWriteup: true,
   },
   {
+    slug: "shelf",
+    name: "Shelf",
+    period: { en: "2026 — present", fr: "2026 — présent" }, // TODO: verify
+    role: {
+      en: "Solo — product, architecture & development",
+      fr: "Solo — produit, architecture & développement",
+    },
+    tagline: {
+      en: "A private, AI-native tracker for everything you read and watch.",
+      fr: "Un tracker privé et AI-native pour tout ce que tu lis et regardes.",
+    },
+    summary: {
+      en: "One place for manga, books, films, series and anime, with a Claude-powered companion that recommends across formats, writes spoiler-free recaps, and follows releases. A Next.js 14 App Router app over a Prisma 7 / PostgreSQL core, Supabase Auth, and a resilient multi-source release tracker.",
+      fr: "Un seul endroit pour manga, livres, films, séries et anime, avec un compagnon propulsé par Claude qui recommande à travers les formats, rédige des recaps sans spoiler et suit les sorties. Une app Next.js 14 App Router sur un cœur Prisma 7 / PostgreSQL, Supabase Auth et un suivi de sorties multi-sources résilient.",
+    },
+    stack: [
+      "Next.js 14",
+      "TypeScript",
+      "Prisma 7",
+      "PostgreSQL",
+      "Claude API",
+      "Supabase Auth",
+      "Tailwind",
+      "shadcn/ui",
+      "Vercel",
+    ],
+    facts: [
+      {
+        label: { en: "AI companion", fr: "Compagnon IA" },
+        detail: {
+          en: "A streaming chat that searches real catalogs (TMDB, AniList, Google Books), remembers your taste, and adds titles in one tap.",
+          fr: "Un chat en streaming qui interroge de vrais catalogues (TMDB, AniList, Google Books), retient tes goûts et ajoute un titre en un tap.",
+        },
+      },
+      {
+        label: {
+          en: "Resilient release tracking",
+          fr: "Suivi de sorties résilient",
+        },
+        detail: {
+          en: "A ComicK → MangaDex → MangaUpdates cascade with guardrails and cadence estimation — accurate chapter numbers with no manual upkeep.",
+          fr: "Une cascade ComicK → MangaDex → MangaUpdates avec garde-fous et estimation de cadence — des numéros de chapitres justes sans maintenance.",
+        },
+      },
+      {
+        label: { en: "Streamed, model-aware", fr: "Streaming, choix du modèle" },
+        detail: {
+          en: "Recaps and chat stream over NDJSON; Haiku by default for speed, Sonnet on demand, thinking off to cut latency.",
+          fr: "Recaps et chat streamés en NDJSON ; Haiku par défaut pour la vitesse, Sonnet à la demande, thinking désactivé pour la latence.",
+        },
+      },
+      {
+        label: { en: "Cross-media by design", fr: "Transmédia par conception" },
+        detail: {
+          en: "Recommendations bridge anime ↔ manga ↔ book, filter by streaming platform, and exclude what you already own.",
+          fr: "Les recommandations relient anime ↔ manga ↔ livre, filtrent par plateforme et excluent ce que tu possèdes déjà.",
+        },
+      },
+    ],
+    primaryAngle: "ai",
+    angles: {
+      ai: {
+        headline: {
+          en: "A companion that actually knows your library",
+          fr: "Un compagnon qui connaît vraiment ta bibliothèque",
+        },
+        summary: {
+          en: "A streaming chat that tool-calls real catalogs for titles you don't own yet, keeps a persistent taste profile, bridges anime, manga and books, and returns actionable cards — Claude Haiku by default, Sonnet on demand.",
+          fr: "Un chat en streaming qui appelle de vrais catalogues pour des titres que tu ne possèdes pas encore, garde un profil de goûts persistant, relie anime, manga et livres et rend des cartes actionnables — Claude Haiku par défaut, Sonnet à la demande.",
+        },
+        stack: ["Claude API", "NDJSON streaming", "taste memory"],
+      },
+      engineering: {
+        headline: {
+          en: "Reliable release tracking without a perfect API",
+          fr: "Un suivi de sorties fiable sans API parfaite",
+        },
+        summary: {
+          en: "No free source cleanly covers manhwa release dates, so a ComicK → MangaDex → MangaUpdates cascade with guardrails and cadence estimation keeps chapter numbers honest — over an RSC (force-dynamic) Next.js app with a Prisma 7 / PostgreSQL core.",
+          fr: "Aucune source gratuite ne couvre proprement les dates de sortie manhwa : une cascade ComicK → MangaDex → MangaUpdates avec garde-fous et estimation de cadence garde des numéros justes — sur une app Next.js RSC (force-dynamic) avec un cœur Prisma 7 / PostgreSQL.",
+        },
+        stack: ["Next.js 14", "Prisma 7", "PostgreSQL", "multi-source cascade"],
+      },
+    },
+    links: [],
+    isPrivate: true,
+    hasWriteup: true,
+  },
+  {
     slug: "vybe",
     name: "Vybe",
     period: { en: "2026 — present", fr: "2026 — présent" }, // TODO: verify

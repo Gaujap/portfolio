@@ -20,8 +20,8 @@ import type { Angle } from "@/content/types";
 /** Each angle's flagship form (index into the scene's FORMS/projects order). */
 const FLAGSHIP_FORM: Record<Angle, number> = {
   ai: 0, // Hermes waveform ring
-  security: 3, // bridged clusters
-  engineering: 1, // Vybe ranking stack
+  security: 4, // bridged clusters (Hybrid network)
+  engineering: 2, // Vybe ranking stack
 };
 
 /**
