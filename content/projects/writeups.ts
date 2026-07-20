@@ -13,6 +13,8 @@ const writeups: Record<string, () => Promise<{ default: ComponentType }>> = {
   "shelf.fr": () => import("./shelf.fr.mdx"),
   "vybe.en": () => import("./vybe.en.mdx"),
   "vybe.fr": () => import("./vybe.fr.mdx"),
+  "domus.en": () => import("./domus.en.mdx"),
+  "domus.fr": () => import("./domus.fr.mdx"),
   "notion-mcp-pipeline.en": () => import("./notion-mcp-pipeline.en.mdx"),
   "notion-mcp-pipeline.fr": () => import("./notion-mcp-pipeline.fr.mdx"),
   "hybrid-network.en": () => import("./hybrid-network.en.mdx"),

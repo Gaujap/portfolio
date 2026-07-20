@@ -1,0 +1,31 @@
+## Le problème
+
+<Lead>Une rénovation locative dure un an à travers une dizaine de corps d'état, et l'argent fuit entre tableurs, devis, tickets et visites de chantier.</Lead>
+
+Rénover un bien pour le louer est réellement difficile à gérer. Ça dure environ un an à travers des corps d'état ordonnés — démolition, isolation, électricité, plomberie, doublage, cloisons, plafonds, sols, peinture — avec des coûts venant des matériaux (quantités dérivées des surfaces) et des lots forfaitaires, chez plusieurs fournisseurs aux prix et TVA différents. Et la vraie question n'est pas seulement *combien ça coûte* mais *si l'investissement en vaut la peine*. Domus tient tout ça dans un seul modèle plutôt que dans une pile de tableurs.
+
+## Contraintes
+
+<Lead>Un outil de production privé pour deux utilisateurs réels — il doit donc être juste, collaboratif et résilient, pas une simple démo.</Lead>
+
+- **Des décisions sur de l'argent réel.** Les chiffres pilotent un vrai investissement, donc les moteurs d'estimation et de finance doivent être justes et vérifiables — pas approximativement corrects.
+- **Deux utilisateurs, à distance, sur les mêmes projets.** Un ADMIN et un contributeur travaillent les mêmes données en même temps, ce qui fait du contrôle d'accès et de la collaboration temps réel des sujets de premier plan, pas des à-côtés.
+- **Ça doit tenir sur le terrain.** Les visites de chantier se font avec une mauvaise connexion, donc les écritures faites hors-ligne ne peuvent pas simplement être perdues.
+
+## Approche
+
+<Lead>Modéliser la rénovation en lots → pièces → surfaces, piloter les coûts par des formules typées, et faire de la base elle-même la frontière de sécurité.</Lead>
+
+Un projet est modélisé en **lots → pièces → surfaces**, chaque surface portant sa géométrie. Des **recettes de travaux** (« postes de travaux ») réutilisables, assignées aux surfaces, alimentent un moteur de règles qui transforme la géométrie en quantités de matériaux via des **formules** typées (surface, linéaire, espacement, packs, volume, périmètre), puis une tarification multi-fournisseurs choisit la source la moins chère et gère HT/TTC, aléas et heures de main-d'œuvre. Le suivi de chantier épouse l'année : avancement par **corps d'état**, échéances et vue des retards, dépenses réelles face à l'estimé, et une courbe de besoin en trésorerie. Par-dessus, un moteur financier — rendement, cash-flow, amortissement de prêt, IRR et **régimes fiscaux français** — sur une projection pluriannuelle. Le modèle de sécurité est **RLS-first** : la base est la frontière de confiance, chaque requête passe par un client Supabase cadré RLS gardé par un seul helper SQL (`can_access_project`), le stockage impose l'accès par projet en analysant le chemin de l'objet, et **Prisma ne sert qu'au schéma et aux migrations, jamais à l'exécution** — une séparation délibérée. Le calculateur de matériaux et le modèle financier sont des **fonctions pures**, testées unitairement en isolation avec Vitest.
+
+## Ce qui a été livré
+
+<Lead>Une app de production utilisée au quotidien : listes de courses chiffrées, planning de chantier, budget prévu/réel, mesure sur plan et assistant Claude.</Lead>
+
+Environ **30 tables** couvrant estimation, suivi de chantier, finance, documents, collaboration et stockage. Le calculateur produit une liste de courses chiffrée filtrée par périmètre et corps d'état avec un mode « restant seulement » ; le planning répond à « est-on dans les temps ? » ; le budget prévu/réel plus la courbe de cash-flow répond à « combien de trésorerie et pour quel mois ? ». On peut importer un plan et **mesurer directement dessus** — calibrer l'échelle une fois, cliquer deux points, pousser la distance réelle dans une surface. Un assistant Claude répond aux questions sur le projet, la vision transforme un ticket photographié en lignes de dépense, et il y a un export Excel et une impression PDF. Les écritures hors-ligne sont mises en file localement et rejouées à la reconnexion ; les suppressions sont récupérables depuis un snapshot.
+
+## Ce que je ferais différemment
+
+<Lead>La simplification de l'UX était un sauvetage en cours de route qui aurait dû être la posture de départ.</Lead>
+
+L'app a d'abord exposé tout son modèle métier — **14 onglets à plat** de surfaces, postes et corps d'état — et n'a été ramenée que plus tard à **4 onglets principaux plus un menu « Plus »**, avec des flux guidés qui cachent le jargon derrière des actions en langage clair. Cette refonte a été menée sur du vrai retour d'usage, et elle a marché, mais je partirais des flux guidés la prochaine fois et révélerais le modèle sous-jacent progressivement plutôt qu'en tête. Je pousserais aussi plus tôt une partie de la politique RLS dans des fixtures SQL testées — la frontière de sécurité est la partie que je veux la plus prouvable, pas seulement relue.
