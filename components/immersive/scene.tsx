@@ -7,10 +7,11 @@ import { scrollState } from "@/lib/scroll-state";
 
 /*
  * The immersive backdrop: a drifting particle field and a thematic wireframe
- * form per project — a waveform ring for the voice assistant, a ranking stack
- * for the creator platform, a node queue for the agent pipeline, two bridged
- * clusters for the network, a timetable lattice for the scheduler. The camera
- * dollies with scroll and leans toward the pointer.
+ * form per project — a waveform ring for the voice assistant, a shelf of media
+ * spines for the tracker, a ranking stack for the creator platform, a node
+ * queue for the agent pipeline, two bridged clusters for the network, a
+ * timetable lattice for the scheduler. The camera dollies with scroll and
+ * leans toward the pointer.
  *
  * WebGL can't read CSS custom properties (and three can't parse oklch), so the
  * theme palettes are mirrored here. `visuals` is recomputed once per frame by
@@ -147,6 +148,60 @@ function WaveformRing({ index }: { index: number }) {
     >
       <boxGeometry args={[0.09, 1, 0.09]} />
     </instancedMesh>
+  );
+}
+
+/** Shelf: rows of media spines, a browsing wave tipping each one as it passes. */
+function ShelfForm({ index }: { index: number }) {
+  const COLS = 7;
+  const ROWS = 3;
+  const COUNT = COLS * ROWS;
+  const mesh = useRef<THREE.InstancedMesh>(null);
+  const material = useSyncedMaterial();
+  const proxy = useMemo(() => new THREE.Object3D(), []);
+
+  // Stable, varied spine heights so the shelf reads as a real collection
+  // rather than a grid — deterministic, so every load looks the same.
+  const heights = useMemo(
+    () => Array.from({ length: COUNT }, (_, i) => 0.62 + (((i * 37) % 11) / 11) * 0.7),
+    [COUNT],
+  );
+
+  useFrame((state) => {
+    const instanced = mesh.current;
+    if (!instanced || visuals.activeForm !== index) return;
+    const t = state.clock.elapsedTime;
+    // A browsing wave runs along the shelves, tipping each spine forward as it
+    // passes — like a finger trailing across the collection.
+    const sweep = ((t * 1.6) % (COLS + 2)) - 1;
+    for (let i = 0; i < COUNT; i++) {
+      const col = i % COLS;
+      const row = Math.floor(i / COLS);
+      const nearness = Math.max(0, 1 - Math.abs(sweep - col));
+      const lift = nearness * 0.3;
+      proxy.position.set(
+        (col - (COLS - 1) / 2) * 0.34,
+        (row - (ROWS - 1) / 2) * 0.82,
+        lift * 0.6,
+      );
+      proxy.rotation.z = nearness * -0.24;
+      proxy.scale.set(1, heights[i] + lift, 1);
+      proxy.updateMatrix();
+      instanced.setMatrixAt(i, proxy.matrix);
+    }
+    instanced.instanceMatrix.needsUpdate = true;
+  });
+
+  return (
+    <group rotation={[0.12, 0.2, 0]}>
+      <instancedMesh
+        ref={mesh}
+        args={[undefined, undefined, COUNT] as unknown as [THREE.BufferGeometry, THREE.Material, number]}
+        material={material}
+      >
+        <boxGeometry args={[0.16, 1, 0.08]} />
+      </instancedMesh>
+    </group>
   );
 }
 
@@ -330,11 +385,12 @@ function TimetableLattice({ index }: { index: number }) {
 }
 
 const FORMS = [
-  WaveformRing,
-  RankingStack,
-  NodeQueue,
-  BridgedClusters,
-  TimetableLattice,
+  WaveformRing, // Hermes
+  ShelfForm, // Shelf
+  RankingStack, // Vybe
+  NodeQueue, // Notion / MCP pipeline
+  BridgedClusters, // Hybrid network
+  TimetableLattice, // Ski & theatre scheduling
 ];
 
 function Centerpiece({

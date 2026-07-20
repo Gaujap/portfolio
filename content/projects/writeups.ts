@@ -9,6 +9,8 @@ import type { Locale } from "@/lib/i18n";
 const writeups: Record<string, () => Promise<{ default: ComponentType }>> = {
   "hermes.en": () => import("./hermes.en.mdx"),
   "hermes.fr": () => import("./hermes.fr.mdx"),
+  "shelf.en": () => import("./shelf.en.mdx"),
+  "shelf.fr": () => import("./shelf.fr.mdx"),
   "vybe.en": () => import("./vybe.en.mdx"),
   "vybe.fr": () => import("./vybe.fr.mdx"),
   "notion-mcp-pipeline.en": () => import("./notion-mcp-pipeline.en.mdx"),
