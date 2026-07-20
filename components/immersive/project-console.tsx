@@ -189,7 +189,8 @@ export function ProjectConsole({
               <button
                 key={entry.slug}
                 type="button"
-                aria-label={entry.name}
+                // The accessible name must contain the visible "01" text.
+                aria-label={`${String(i + 1).padStart(2, "0")} · ${entry.name}`}
                 aria-current={i === active ? "true" : undefined}
                 onClick={() => jumpTo(i)}
                 className={cn(
