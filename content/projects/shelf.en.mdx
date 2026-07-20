@@ -1,0 +1,31 @@
+## Problem
+
+<Lead>Tracking five kinds of media across five different apps — and none of them recommends across formats or reliably follows releases.</Lead>
+
+Manga in one app, films in another, books in a third: progress scattered, and nothing bridges formats or tracks manhwa releases well. AniList doesn't know my Letterboxd, Goodreads doesn't know my manga, and none of them recommends *across* formats. I wanted one private place for everything I read and watch, with an assistant that actually knows my library.
+
+## Constraints
+
+<Lead>A personal, single-user app — but held to product standards: real catalogs, honest release data, and latency low enough to feel instant.</Lead>
+
+- **Real data, not a toy.** Recommendations and tracking pull from live catalogs — TMDB, AniList, Google Books — so the assistant has to search sources I don't own yet, not just read back my own shelf.
+- **No perfect release API.** No free source cleanly covers manhwa release dates {/* TODO: verify */}, so the tracker has to stay right even when any single source is wrong or down.
+- **Latency.** Recaps and chat only feel usable if they stream and stay fast, which drives the model choices rather than the other way around.
+
+## Approach
+
+<Lead>A Claude companion that tool-calls real catalogs, a resilient multi-source release cascade, and a streaming layer that picks the right model for the job.</Lead>
+
+The core is an **AI companion**: a streaming chat (**NDJSON**) that calls tools to search real titles, understands a persistent **taste profile**, recommends toward or away from it, filters by streaming platform, bridges **anime ↔ manga ↔ book**, and returns actionable cards (add / where to watch). Release tracking runs a **ComicK → MangaDex → MangaUpdates** cascade with guardrails — never showing a number below what you've already read — plus cadence estimation, so chapters stay accurate with no manual upkeep. Recaps and chat stream, with **Claude Haiku** by default for speed and **Sonnet** on demand; thinking is disabled to cut latency, with a fallback on overload. Underneath: **Next.js 14** App Router with RSC (`force-dynamic`) and Server Actions, a **Prisma 7 / PostgreSQL** core, **Supabase Auth** on an allowlist, and a bespoke "liquid glass" design system with a command palette and anti-CLS skeletons.
+
+## What shipped
+
+<Lead>Around sixteen sections orbiting one assistant: library, discover, calendar, a seasonal-anime hub, a "what do I watch tonight" decider, and a two-person mode.</Lead>
+
+A working private tracker — home, library, discover, calendar, stats, chat, a shared "à deux" mode, a seasonal-anime hub, and detail pages: roughly sixteen sections {/* TODO: verify */}, all served by the companion. Spoiler-free recaps, a "tonight I'll watch what" decider, ISBN barcode scanning, a release calendar with Google Calendar export, and push notifications round it out. It's a single-user app I actually use daily, not a demo.
+
+## What I'd do differently
+
+<Lead>The multi-source cascade earns its keep — but the cross-source matching layer is where the next reliability work lives.</Lead>
+
+The provider cascade was the right call: resilience beat betting on any single "best" source. But the hardest bug class was **wrong chapter numbers from bad title matches** across sources, patched with guardrails rather than solved at the root. I'd invest next in a stronger cross-source identity layer, so a title resolves to one canonical entity *before* any number is trusted. I'd also lean harder on the taste store: grounding recommendations in it and excluding owned or dismissed titles fixed the "recommends what I already have" problem, and there's more signal in there to use.

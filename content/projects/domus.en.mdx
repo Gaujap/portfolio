@@ -1,0 +1,31 @@
+## Problem
+
+<Lead>A buy-to-let renovation runs a year across a dozen trades, and money leaks between spreadsheets, quotes, receipts and site visits.</Lead>
+
+Renovating a property to rent it out is a genuinely hard thing to manage. It runs about a year through ordered trades — démolition, isolation, électricité, plomberie, doublage, cloisons, plafonds, sols, peinture — with costs coming from materials (quantities derived from surfaces) and lump-sum trades, across multiple suppliers with different prices and VAT. And the real question isn't just *what it costs* but *whether the investment is worth it*. Domus holds all of that in one model instead of a pile of spreadsheets.
+
+## Constraints
+
+<Lead>A private production tool for two real users — so it has to be correct, collaborative, and resilient, not just a demo.</Lead>
+
+- **Real money decisions.** The numbers drive an actual investment, so the estimation and finance engines have to be correct and verifiable — not approximately right.
+- **Two users, remote, on the same projects.** An ADMIN and a contributor work the same data at the same time, which makes access control and realtime collaboration first-class concerns, not afterthoughts.
+- **It has to survive the field.** Site visits happen with bad connectivity, so writes made offline can't just be lost.
+
+## Approach
+
+<Lead>Model the renovation as lots → rooms → surfaces, drive costs from typed formulas, and make the database itself the security boundary.</Lead>
+
+A project is modelled as **lots → rooms → surfaces**, each surface carrying geometry. Reusable **work recipes** ("postes de travaux") assigned to surfaces feed a rules engine that turns geometry into material quantities via typed **formulas** (area, linear, spacing, packs, volume, perimeter), then multi-supplier pricing picks the cheapest source and handles HT/TTC, contingency and labour hours. Worksite tracking follows the year: progress per **trade**, deadlines and an overdue view, real spend versus estimate, and a cash-need curve. On top sits a finance engine — yield, cash-flow, loan amortisation, IRR and **French tax regimes** — over a multi-year projection. The security model is **RLS-first**: the database is the trust boundary, every runtime query goes through an RLS-scoped Supabase client gated by one SQL helper (`can_access_project`), storage enforces per-project access by parsing the object path, and **Prisma is used only for schema and migrations, never at runtime** — a deliberate split. The material calculator and the finance model are **pure functions**, unit-tested in isolation with Vitest.
+
+## What shipped
+
+<Lead>A production app in daily use: costed shopping lists, a worksite planner, budget-vs-actual, on-plan measurement, and a Claude assistant.</Lead>
+
+Around **30 database tables** spanning estimation, worksite tracking, finance, documents, collaboration and storage. The calculator produces a costed shopping list filtered by scope and trade with a "remaining only" mode; the planner answers "are we on schedule?"; budget prévu-vs-réel plus the cash-flow curve answers "how much cash by which month?". You can import a floor plan and **measure directly on it** — calibrate the scale once, click two points, push the real distance into a surface. A Claude assistant answers project questions, vision scanning turns a photographed receipt into line items, and there's Excel export and print-to-PDF. Offline writes queue locally and replay on reconnect; deletes are recoverable from a snapshot.
+
+## What I'd do differently
+
+<Lead>The UX simplification was a mid-course rescue that should have been the starting posture.</Lead>
+
+The app began exposing its full domain model — **14 flat tabs** of surfaces, postes and trades — and only later collapsed to **4 primary tabs plus a "More" menu** with guided flows that hide the jargon behind plain-language actions. That overhaul was driven by real usability feedback, and it worked, but I'd start from guided flows next time and reveal the underlying model progressively rather than leading with it. I'd also push more of the RLS policy into tested SQL fixtures earlier — the security boundary is the part I most want provable, not just reviewed.

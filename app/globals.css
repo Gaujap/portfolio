@@ -1,0 +1,240 @@
+@import "tailwindcss";
+
+/*
+ * Dark mode is class-based (`.dark` on <html>), toggled by the theme switch.
+ * `:where()` keeps the variant at zero specificity so utilities stay overridable.
+ */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Palette — two genuine palettes, not an inverted filter.
+ * Colours are authored in OKLCH for perceptually even tints and predictable
+ * contrast. Hex equivalents are noted for reference.
+ *
+ * Contrast (verified, WCAG AA needs 4.5:1 body / 3:1 large & UI):
+ *   light  fg on bg      ~14.8:1   AAA
+ *   light  muted on bg    ~5.3:1   AA  (body)
+ *   light  accent on bg   ~4.6:1   AA  (large text, borders, links)
+ *   dark   fg on bg      ~13.9:1   AAA
+ *   dark   muted on bg    ~5.6:1   AA  (body)
+ *   dark   accent on bg   ~5.9:1   AA
+ */
+:root {
+  --paper: oklch(0.976 0.006 84); /* #FAF7F1 warm paper */
+  --ink: oklch(0.227 0.006 60); /* #1A1714 near-black */
+  --muted: oklch(0.47 0.017 68); /* #5E564D warm grey */
+  --accent: oklch(0.548 0.155 34); /* #B8442B vermillion / rust */
+  --accent-contrast: oklch(0.98 0.006 84); /* text on accent fills */
+  --line: oklch(0.912 0.008 82); /* #E7E1D6 hairline */
+}
+
+.dark {
+  --paper: oklch(0.196 0.007 84); /* #17150F warm dark grey */
+  --ink: oklch(0.918 0.01 85); /* #E9E3D6 warm off-white */
+  --muted: oklch(0.7 0.013 85); /* #A79E90 */
+  --accent: oklch(0.665 0.135 37); /* #D9694C rust, lifted for AA on dark */
+  --accent-contrast: oklch(0.196 0.007 84); /* text on accent fills */
+  --line: oklch(0.3 0.008 80); /* #322E26 */
+}
+
+/*
+ * `@theme inline` exposes the palette as Tailwind tokens whose values are the
+ * `var(--…)` references themselves, so utilities like `bg-bg` / `text-accent`
+ * resolve live against `:root` or `.dark` — that is what makes theme switching
+ * work without duplicating every utility.
+ */
+@theme inline {
+  --color-bg: var(--paper);
+  --color-fg: var(--ink);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-accent-contrast: var(--accent-contrast);
+  --color-line: var(--line);
+
+  --font-display: var(--font-newsreader), ui-serif, Georgia, "Times New Roman",
+    serif;
+  --font-sans: var(--font-geist), ui-sans-serif, system-ui, -apple-system,
+    sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, "SF Mono", Menlo, monospace;
+}
+
+@layer base {
+  html {
+    color-scheme: light;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  html.dark {
+    color-scheme: dark;
+  }
+
+  body {
+    background-color: var(--color-bg);
+    color: var(--color-fg);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background-color: var(--color-accent);
+    color: var(--color-accent-contrast);
+  }
+
+  /* One visible, consistent focus ring everywhere (a11y requirement). */
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+}
+
+/*
+ * Scroll-reveal. Content is visible by default; it is only hidden (to be
+ * revealed on entry) when JS is available AND motion is allowed. So no-JS users
+ * and reduced-motion users always see content immediately — the animation is a
+ * pure enhancement. The `data-revealed` attribute is set once by the Reveal
+ * component's IntersectionObserver.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  html.js .reveal {
+    opacity: 0;
+    transform: translateY(10px);
+    transition:
+      opacity 400ms ease-out,
+      transform 400ms ease-out;
+  }
+
+  html.js .reveal[data-revealed="true"] {
+    opacity: 1;
+    transform: none;
+  }
+
+  /*
+   * Hermes diagram signature trace. Hidden (undrawn) only when JS + motion are
+   * available; it draws once when the diagram scrolls into view. Otherwise the
+   * accent line is simply drawn, so the diagram is always complete.
+   */
+  html.js .hermes-trace {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+  }
+
+  html.js .hermes-diagram[data-animate="true"] .hermes-trace {
+    animation: hermes-draw 1.4s ease-out forwards;
+  }
+}
+
+@keyframes hermes-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/*
+ * Film grain over the whole viewport — the texture that keeps large dark
+ * surfaces and WebGL gradients from banding. Static SVG noise, no animation,
+ * non-interactive, and subtle enough to survive light mode.
+ */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Grain reads as dirt on warm paper — keep it fainter in light mode. */
+html:not(.dark) body::after {
+  opacity: 0.025;
+}
+
+/* The ship guide's idle life and scan beam. */
+@media (prefers-reduced-motion: no-preference) {
+  .ship-bob {
+    animation: ship-bob 2.8s ease-in-out infinite;
+  }
+}
+
+@keyframes ship-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2.5px);
+  }
+}
+
+/*
+ * Halo on whatever the guide is presenting: the target brightens and an
+ * accent hairline draws itself underneath — unmissable, still no drawn line
+ * between ship and target.
+ */
+.guide-lit {
+  /* fit-content shrink-wraps the underline to the text without moving any
+     sibling — the halo must never perturb layout (it re-fired observers). */
+  position: relative;
+  width: fit-content;
+  text-shadow: 0 0 20px var(--accent);
+  filter: brightness(1.25);
+}
+
+.guide-lit::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -0.45em;
+  height: 1px;
+  width: 100%;
+  background: var(--accent);
+  box-shadow: 0 0 10px var(--accent);
+  transform-origin: left;
+  animation: guide-underline 420ms ease-out both;
+}
+
+@keyframes guide-underline {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+/* Asteroid-hunt props (idle patrol easter egg). Plain DOM, next to free. */
+.ship-asteroid {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 18px;
+  height: 18px;
+  border: 1.5px solid color-mix(in oklab, var(--accent) 80%, var(--fg));
+  box-shadow:
+    0 0 9px color-mix(in oklab, var(--accent) 45%, transparent),
+    inset 0 0 5px color-mix(in oklab, var(--accent) 35%, transparent);
+  clip-path: polygon(30% 0, 80% 10%, 100% 55%, 70% 100%, 20% 90%, 0 40%);
+  opacity: 0;
+  transition: opacity 300ms ease;
+}
+
+.ship-laser {
+  position: fixed;
+  height: 1.5px;
+  transform-origin: 0 50%;
+  background: linear-gradient(to right, var(--accent), transparent);
+  opacity: 0;
+  transition: opacity 140ms ease;
+}
+
+.ship-fragment {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 8px;
+  height: 8px;
+  border: 1px solid var(--accent);
+  box-shadow: 0 0 7px color-mix(in oklab, var(--accent) 60%, transparent);
+  clip-path: polygon(50% 0, 100% 100%, 0 80%);
+  opacity: 0;
+}

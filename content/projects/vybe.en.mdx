@@ -1,0 +1,31 @@
+## Problem
+
+<Lead>Vybe is a creator-economy platform built for the French market — where creators grow an audience and, crucially, get paid.</Lead>
+
+It's a bet on specificity. The gap I wanted to close is that generic tooling rarely fits the specifics of the French market — payouts, expectations, and the local creator context — so the product is designed around that from the start. It's still in development, a three-person team building toward a pre-fundraising demo.
+
+## Constraints
+
+<Lead>Three people, real money in motion, and a fundraising clock — with no license to fake auth, payments, or media.</Lead>
+
+- **Small team, big surface.** With three people covering frontend, backend, payments, and media, every architectural choice has to earn its keep — there's no room for infrastructure we'd have to maintain but don't yet need.
+- **Payments-grade correctness.** The moment real money moves, "mostly works" isn't acceptable. Creator payouts run through **Stripe Connect Express**, and getting onboarding, verification, and payout state right is non-negotiable.
+- **Convincing demo, fast — without cutting security corners.** Pre-fundraising means we need something that demos well soon, but the temptation to fake the hard parts (auth, payments, media handling) is exactly the temptation to resist.
+
+## Approach
+
+<Lead>Managed, battle-tested primitives — Stripe Connect, Supabase, R2 — for everything hard to get right, so scarce team hours go into the product.</Lead>
+
+The frontend is **Next.js 14** with the App Router; the backend is **Fastify** with **WebSockets** for realtime interactions. Data lives in **PostgreSQL** via **Supabase**, accessed through **Prisma** so the schema is typed and migrations are tracked. Creator monetization is built on **Stripe Connect Express**, which handles the identity verification and payout mechanics we have no business reimplementing. Media — the heavy, expensive-to-serve part — goes to **Cloudflare R2** to keep egress costs sane and keep large files off the primary database. The through-line was to lean on managed, correct primitives for the parts that are hard to get right, and spend our limited team hours on the product itself.
+
+## What shipped
+
+<Lead>An in-development platform whose demo is honest: auth, payouts, realtime, and media all genuinely work.</Lead>
+
+The core architecture is in place: authenticated creator accounts, the Stripe Connect payout flow wired end to end, realtime interactions over WebSockets, and media served from R2. It's built to demo convincingly for fundraising while being real underneath — the payments and auth paths are not smoke and mirrors. The stack is deliberately boring where boring is a virtue, so the team can move fast on the parts that differentiate the product.
+
+## What I'd do differently
+
+<Lead>Stripe Connect is a stateful, asynchronous subsystem — not a mere integration — and my provider-agnostic payments layer was abstraction before need.</Lead>
+
+**Stripe Connect Express onboarding is far more involved than the happy-path docs suggest**, and I underestimated it. Account states, capability requirements, verification that can go pending for days, and the webhook choreography to keep our records in sync — I treated it as "integrate a payout provider" when it's really a stateful, asynchronous subsystem of its own. If I started over, I'd model the Connect account lifecycle explicitly in our own schema from day one instead of reading state off Stripe ad hoc. The related mistake was a bit of premature abstraction: I built a generic payments layer to "stay provider-agnostic" before we had a second provider or any real reason to, and it mostly added indirection over Stripe's already-good SDK. I've since collapsed it — the abstraction should follow the second use case, not precede it.

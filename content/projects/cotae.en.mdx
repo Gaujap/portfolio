@@ -1,0 +1,31 @@
+## Problem
+
+<Lead>Existing plan-survey apps are capped where renovation needs them most — wall heights, free editing, and the insulation that decides a room's real surface.</Lead>
+
+Tools like MagicPlan are limited exactly where a renovation survey needs precision: a capped number of projects, imprecise wall heights, constrained manual editing, and — most of all — no notion of **insulation**, even though it's what determines a room's true surface *after* works. I needed a survey tool that produces exact, post-renovation surfaces I can trust, and that feeds straight into the Domus cost model rather than a separate silo.
+
+## Constraints
+
+<Lead>A field tool that has to stay exact on site, talk to real hardware, and land its data in the same schema as the Domus calculator.</Lead>
+
+- **Exactness on real sites.** The surfaces drive real cost and yield estimates downstream, so a rough scan isn't enough — every wall height and area has to be right.
+- **Talk to the hardware I already use.** A precision laser rangefinder is the ground truth for measurements, so the app has to read from it directly instead of me retyping numbers.
+- **One data model with the web app.** Cotae isn't a standalone toy — its output has to land in the same Supabase / PostgreSQL schema the Domus calculator already reads.
+
+## Approach
+
+<Lead>Scan with LiDAR, refine at the laser, remodel freely — then offset insulation face by face for the real surface, all on one shared schema.</Lead>
+
+Cotae combines the iPad's **LiDAR scan** with a precision laser rangefinder and a bespoke plan editor. A **RoomPlan / ARKit** scan of the home as-is is converted into a *clean, editable* geometric model — free polygons, per-wall heights, sloped ceilings — rather than a locked mesh. Measurements are refined at the laser: I **reverse-engineered the Bluetooth protocol** of the Bosch **UniversalDistance 40C** (mapping the GATT service and decoding the BLE frames) so a reading drops straight into the app. From the scan you remodel freely — break walls, rearrange, adjust heights — and **insulation is posed face by face**, offset geometrically along polygon edges to give both the raw and the real post-works surface. Everything writes to a **single Supabase / PostgreSQL schema shared with the Domus Next.js calculator**, and exports structured data plus dimensioned PDF / JPG plans for the client.
+
+## What shipped
+
+<Lead>An iPad app that scans in place, laser-refines, remodels to exact surfaces, and pushes structured rooms straight into Domus.</Lead>
+
+A working iPad surveying app: LiDAR capture of a home as-is, laser-accurate refinement over reverse-engineered Bluetooth, free remodelling with per-wall heights and sloped ceilings, and face-by-face insulation with raw and post-insulation surface areas. Its output feeds the Domus cost model over a shared database schema, and it exports dimensioned plans (PDF / JPG) for sharing with clients.
+
+## What I'd do differently
+
+<Lead>The editable geometry should have been the canonical model from the start, with the scan as just one importer feeding it.</Lead>
+
+The editable geometry grew out of the RoomPlan scan format, which quietly made the scan the source of truth. I'd invert that: define the canonical editable model first and treat **RoomPlan as one importer among several** (laser-only, fully manual), so the app doesn't lean on any single capture path. I'd also harden the Bluetooth layer — a reverse-engineered protocol is brittle to firmware changes, so a small **capture-and-replay harness** to re-derive frame formats quickly would save the next round of guessing.

@@ -1,0 +1,31 @@
+## Problem
+
+<Lead>My apprenticeship project at 2C2L: modernizing a legacy Django scheduling platform that roughly 30 ski and theatre schools rely on in production.</Lead>
+
+It's been my main workstream from day one. The platform works, but it had aged into something increasingly hard to evolve, so the mandate was to modernize it — a **Vue 3 / Quasar** frontend backed by a newly designed API. The catch is that this isn't a greenfield rewrite; it's surgery on a system real schools depend on to run their seasons.
+
+## Constraints
+
+<Lead>Zero downtime for the entire migration, a three-person team, and real schools mid-season who can't wait for next sprint.</Lead>
+
+- **Zero downtime, throughout.** The defining constraint: the legacy system must stay live for the entire migration. These ~30 schools can't go offline — least of all during ski-season peaks when the platform is under the most load and the most scrutiny. {/* TODO: verify */}
+- **Small team.** Three people carrying a live product, a new API, and a new frontend at the same time. {/* TODO: verify */}
+- **Real users, real seasons.** Every change ships against people mid-workflow, so "we'll fix it next sprint" has a cost measured in someone's scheduling day.
+
+## Approach
+
+<Lead>Strangler fig, not big bang: the new stack absorbs one capability at a time while legacy Django keeps serving the rest.</Lead>
+
+The new API and Vue 3 / Quasar frontend grow alongside the legacy Django app, taking over incrementally rather than through a single cutover. New surfaces are built against the new API; the legacy platform stays authoritative for the rest until each slice is proven and handed over. This lets me move real users onto modern paths incrementally, validate under actual production load, and always have the old system as a fallback rather than betting a season on a single switchover.
+
+## What shipped
+
+<Lead>The migration is live: real slices already run on the new stack in production, validated by real usage, with no downtime to date.</Lead>
+
+Parts of the platform now run on the new Vue 3 / Quasar frontend and the new API, while the legacy Django system continues to serve the rest. The strangler-fig approach has held: slices go live incrementally, validated against real usage, with the legacy system as a safety net. It's proven that a modernization this constrained can happen underneath a live product rather than requiring it to stop.
+
+## What I'd do differently
+
+<Lead>Clean new models don't map onto years of accumulated schema assumptions — next time I'd start with archaeology, not design.</Lead>
+
+The hardest and most underestimated cost has been **data-model divergence** between legacy and new. The old Django schema encodes years of accumulated assumptions — implicit rules, special cases, fields that mean subtly different things than their names suggest — and the new API's cleaner model doesn't map one-to-one. Running both systems in parallel means keeping them consistent across that gap, and every mismatch becomes a translation layer, a sync concern, or a subtle bug that only surfaces with real data. If I started over, I'd spend far more time upfront *reverse-engineering the true semantics* of the legacy model — writing down what the data actually means, not what the schema claims — before designing the new one. I moved to the clean design too quickly, and I've paid for it in reconciliation work that a slower, more archaeological start would have avoided.

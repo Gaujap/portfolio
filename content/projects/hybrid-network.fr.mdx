@@ -1,0 +1,31 @@
+## Problème
+
+<Lead>Un projet académique en filière sécurité : un réseau d'entreprise bi-site conçu en partant du principe qu'il sera attaqué.</Lead>
+
+La mission : concevoir et valider l'architecture segmentée complète. L'objectif n'était pas seulement de faire circuler des paquets entre deux sites, mais de bâtir une architecture qui présume la compromission — segmentation, points d'entrée contrôlés, et assez d'observabilité pour voir réellement ce qui se passe. Autrement dit, le traiter comme un réseau qu'une équipe sécurité devrait défendre, pas juste un réseau qui fonctionne.
+
+## Contraintes
+
+<Lead>Pas de second site ni de vrai WAN : tout au-delà de la première machine a dû être simulé en KVM imbriqué, dans le temps imparti d'un cours.</Lead>
+
+- **Pas de second site physique.** J'avais une machine, pas deux campus, donc tout le second site — et le WAN entre eux — devait vivre en **KVM imbriqué**. Cela conditionne ce que l'on peut, ou non, valider.
+- **Périmètre et temps académiques.** Il fallait livrer une conception cohérente et défendable dans le cadre d'un cours, pas un chantier d'infrastructure ouvert.
+- **La défendabilité avant le confort.** Chaque décision de segmentation et d'accès devait être justifiable du point de vue sécurité, pas seulement la plus simple à câbler.
+
+## Approche
+
+<Lead>Tout repose sur des frontières contrôlées : deux sites gardés par pfSense reliés en VPN, une DMZ, un unique chemin bastion, et NetBox plus Elasticsearch pour garder l'ensemble lisible.</Lead>
+
+La fondation, c'est **Proxmox** comme hôte de virtualisation, avec **pfSense** pour le routage et le pare-feu sur chaque site, et un **VPN site à site** pour les relier. La segmentation est le cœur de la conception : une **DMZ** isole les services exposés, et un **hôte bastion** est le seul chemin contrôlé pour l'accès d'administration vers les segments internes. **NetBox** sert de source de vérité pour la documentation et l'IPAM, afin que le plan d'adressage et la topologie soient consignés plutôt que gardés en tête, et **Elasticsearch** agrège les logs pour rendre le réseau observable plutôt qu'une boîte noire. Toute la topologie bi-site, second site compris, a été prototypée en virtualisation imbriquée.
+
+## Ce qui a été livré
+
+<Lead>Un prototype bi-site pleinement fonctionnel, validé de bout en bout en KVM imbriqué — chaque garantie de sécurité démontrée, pas seulement affirmée.</Lead>
+
+Réseaux segmentés avec DMZ et bastion, VPN site à site opérationnel, IPAM et topologie documentés dans NetBox, et journalisation centralisée dans Elasticsearch. Il démontre une architecture défendable sur laquelle on peut raisonner : où sont les frontières de confiance, comment l'accès admin est contrôlé, et comment on observerait un incident. En tant que livrable académique, il a rempli son rôle : prouver la conception de bout en bout.
+
+## Ce que je referais autrement
+
+<Lead>Un WAN virtuel sans défaut et un déluge de logs validaient moins qu'il n'y paraissait — la prochaine fois, je dégraderais le lien volontairement et je penserais la détection avant la collecte.</Lead>
+
+La limite honnête, c'est tout ce que le **KVM imbriqué ne peut structurellement pas capturer**. Le VPN a fonctionné sans accroc parce que le « WAN » entre mes deux sites était un switch virtuel à latence quasi nulle, sans gigue ni perte de paquets — rien à voir avec une vraie liaison inter-site, donc je n'ai jamais eu à affronter les problèmes de MTU, le comportement du tunnel sous perte, ou les cas limites de reconnexion qui apparaîtraient à coup sûr sur un vrai WAN. La virtualisation imbriquée masque aussi le comportement réel des cartes réseau — offloading, particularités matérielles, plafonds de débit — donc mon image des performances était fictive. Si j'y revenais, j'injecterais délibérément des dégradations WAN (latence, perte, bande passante contrainte) dans le lien virtuel pour donner du sens à la validation. La seconde chose que j'ai sous-investie, c'est le **rapport signal/bruit de la journalisation** : j'ai tout envoyé dans Elasticsearch en appelant ça de l'observabilité, mais un déluge de logs non filtrés n'est pas de la détection — je concevrais d'abord ce que je cherche réellement, puis je journaliserais dans ce sens.
