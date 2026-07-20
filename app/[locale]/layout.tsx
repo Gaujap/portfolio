@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import { fontVariables } from "@/lib/fonts";
 import { LocaleProvider } from "@/lib/locale-context";
 import { LOCALES, DEFAULT_LOCALE, isLocale, t } from "@/lib/i18n";
@@ -89,6 +91,8 @@ export default async function LocaleLayout({
           <main id="main">{children}</main>
           <Footer locale={locale} />
         </LocaleProvider>
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );

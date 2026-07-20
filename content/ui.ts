@@ -16,6 +16,7 @@ export const ui = {
   actions: {
     contact: { en: "Get in touch", fr: "Me contacter" },
     email: { en: "Email", fr: "Email" },
+    downloadCv: { en: "Download CV", fr: "Télécharger le CV" },
     viewProject: { en: "View project", fr: "Voir le projet" },
     readWriteup: { en: "Read the write-up", fr: "Lire l'étude de cas" },
     backHome: { en: "Back to home", fr: "Retour à l'accueil" },
