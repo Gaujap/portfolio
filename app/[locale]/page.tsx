@@ -100,6 +100,12 @@ export default async function Home({
           emailLabel={t(ui.actions.email, locale)}
           email={site.email}
           socials={site.socials}
+          cvLabel={t(ui.actions.downloadCv, locale)}
+          cvHref={
+            locale === "fr"
+              ? "/Gabriel_Debarnot_CV_FR.pdf"
+              : "/Gabriel_Debarnot_CV_EN.pdf"
+          }
         />
       </div>
     </SmoothScroll>

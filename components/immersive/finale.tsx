@@ -25,6 +25,8 @@ export function Finale({
   emailLabel,
   email,
   socials,
+  cvLabel,
+  cvHref,
 }: {
   nowLabel: string;
   nowText: string;
@@ -33,6 +35,9 @@ export function Finale({
   emailLabel: string;
   email: string;
   socials: FinaleSocial[];
+  cvLabel: string;
+  /** Locale-appropriate CV PDF in /public, served at the site root. */
+  cvHref: string;
 }) {
   const sectionRef = useRef<HTMLElement>(null);
   const buttonRefs = useRef<Array<HTMLDivElement | null>>([]);
@@ -155,6 +160,15 @@ export function Finale({
                 </Button>
               </div>
             ))}
+            {/* The CV sits outside the ship's tour: a native download anchor
+                (next/link would try to route a raw PDF). */}
+            <a
+              href={cvHref}
+              download
+              className="inline-flex items-center gap-2 rounded-full border border-line px-5 py-2.5 text-sm font-medium text-fg transition-colors hover:border-accent hover:text-accent"
+            >
+              {cvLabel} ↓
+            </a>
           </motion.div>
         </Container>
       </section>
