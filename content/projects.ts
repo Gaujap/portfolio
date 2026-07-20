@@ -282,6 +282,103 @@ export const projects: Project[] = [
     hasWriteup: true,
   },
   {
+    slug: "domus",
+    name: "Domus",
+    period: { en: "2026 — present", fr: "2026 — présent" }, // TODO: verify
+    role: {
+      en: "Solo — architecture & full-stack development",
+      fr: "Solo — architecture & développement full-stack",
+    },
+    tagline: {
+      en: "End-to-end management of a buy-to-let renovation — costs, worksite, and yield.",
+      fr: "La gestion de bout en bout d'une rénovation locative — coûts, chantier et rentabilité.",
+    },
+    summary: {
+      en: "A full-stack app that turns a year-long rental renovation into one model: estimate materials and labour from reusable work recipes, track the worksite by trade and deadline, log real spend against the estimate, and project the investment's yield — every query scoped to real users by Postgres Row-Level Security.",
+      fr: "Une app full-stack qui transforme une rénovation locative d'un an en un seul modèle : estimer matériaux et main-d'œuvre à partir de recettes de travaux réutilisables, suivre le chantier par corps d'état et par échéance, pointer les dépenses réelles face à l'estimé, et projeter la rentabilité de l'investissement — chaque requête cadrée par utilisateur via la Row-Level Security Postgres.",
+    },
+    stack: [
+      "Next.js 16",
+      "TypeScript",
+      "PostgreSQL",
+      "Supabase",
+      "Row-Level Security",
+      "Prisma 6",
+      "Tailwind",
+      "shadcn/ui",
+      "Claude API",
+    ],
+    facts: [
+      {
+        label: { en: "RLS is the boundary", fr: "La RLS comme frontière" },
+        detail: {
+          en: "The database enforces access, not app code — every runtime query goes through an RLS-scoped client gated by one SQL helper, and storage checks the object path too.",
+          fr: "La base impose l'accès, pas le code applicatif — chaque requête passe par un client cadré RLS gardé par un seul helper SQL, et le stockage vérifie aussi le chemin de l'objet.",
+        },
+      },
+      {
+        label: { en: "Pure, tested engines", fr: "Moteurs purs et testés" },
+        detail: {
+          en: "The material calculator and the finance model are pure functions with no I/O — unit-tested in isolation with Vitest.",
+          fr: "Le calculateur de matériaux et le modèle financier sont des fonctions pures sans I/O — testés unitairement en isolation avec Vitest.",
+        },
+      },
+      {
+        label: { en: "Costs to IRR", fr: "Des coûts à l'IRR" },
+        detail: {
+          en: "Beyond spend: gross/net yield, monthly cash-flow, loan amortisation, IRR and French tax regimes over a multi-year projection.",
+          fr: "Au-delà des dépenses : rendement brut/net, cash-flow mensuel, amortissement de prêt, IRR et régimes fiscaux français sur une projection pluriannuelle.",
+        },
+      },
+      {
+        label: { en: "Measure on the plan", fr: "Mesurer sur le plan" },
+        detail: {
+          en: "Import a floor plan, calibrate the scale once, then click two points to read a real distance straight into a surface's dimensions.",
+          fr: "Importer un plan, calibrer l'échelle une fois, puis cliquer deux points pour lire une distance réelle directement dans les dimensions d'une surface.",
+        },
+      },
+    ],
+    primaryAngle: "engineering",
+    angles: {
+      engineering: {
+        headline: {
+          en: "A pure domain engine behind a full-stack product",
+          fr: "Un moteur métier pur derrière un produit full-stack",
+        },
+        summary: {
+          en: "A renovation modelled as lots → rooms → surfaces, with a formula rules engine turning geometry into costed material quantities, worksite tracking by trade with planning and budget-vs-actual, and an offline write queue — over ~30 tables on Next.js 16 with Server Actions.",
+          fr: "Une rénovation modélisée en lots → pièces → surfaces, avec un moteur de règles à formules qui transforme la géométrie en quantités de matériaux chiffrées, un suivi de chantier par corps d'état avec planning et budget prévu/réel, et une file d'écriture hors-ligne — sur ~30 tables en Next.js 16 avec Server Actions.",
+        },
+        stack: ["Next.js 16", "Server Actions", "Prisma 6", "Vitest"],
+      },
+      security: {
+        headline: {
+          en: "Row-Level Security as the trust boundary",
+          fr: "La Row-Level Security comme frontière de confiance",
+        },
+        summary: {
+          en: "The database is the boundary, not application code: every runtime query runs through an RLS-scoped Supabase client gated by a single SQL helper, file storage enforces per-project access by parsing the object path, and Prisma is used only for schema and migrations, never at runtime.",
+          fr: "La base est la frontière, pas le code applicatif : chaque requête passe par un client Supabase cadré RLS gardé par un seul helper SQL, le stockage impose l'accès par projet en analysant le chemin de l'objet, et Prisma ne sert qu'au schéma et aux migrations, jamais à l'exécution.",
+        },
+        stack: ["Row-Level Security", "PostgreSQL", "Supabase", "signed URLs"],
+      },
+      ai: {
+        headline: {
+          en: "Claude inside a real product: assistant, vision, pricing",
+          fr: "Claude dans un vrai produit : assistant, vision, prix",
+        },
+        summary: {
+          en: "A Claude-powered assistant answers project questions, vision receipt scanning turns a photographed receipt into line items, and price suggestions help fill the estimate — practical LLM integration wired into the domain model, not bolted on.",
+          fr: "Un assistant propulsé par Claude répond aux questions sur le projet, la vision transforme un ticket photographié en lignes de dépense, et des suggestions de prix aident à remplir l'estimé — une intégration LLM concrète branchée sur le modèle métier, pas plaquée par-dessus.",
+        },
+        stack: ["Claude API", "vision receipt scan", "price suggestions"],
+      },
+    },
+    links: [],
+    isPrivate: true,
+    hasWriteup: true,
+  },
+  {
     slug: "notion-mcp-pipeline",
     name: "Notion / MCP pipeline",
     period: { en: "2025 — present", fr: "2025 — présent" }, // TODO: verify

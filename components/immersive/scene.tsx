@@ -8,10 +8,10 @@ import { scrollState } from "@/lib/scroll-state";
 /*
  * The immersive backdrop: a drifting particle field and a thematic wireframe
  * form per project — a waveform ring for the voice assistant, a shelf of media
- * spines for the tracker, a ranking stack for the creator platform, a node
- * queue for the agent pipeline, two bridged clusters for the network, a
- * timetable lattice for the scheduler. The camera dollies with scroll and
- * leans toward the pointer.
+ * spines for the tracker, a ranking stack for the creator platform, a floor
+ * plan for the renovation manager, a node queue for the agent pipeline, two
+ * bridged clusters for the network, a timetable lattice for the scheduler. The
+ * camera dollies with scroll and leans toward the pointer.
  *
  * WebGL can't read CSS custom properties (and three can't parse oklch), so the
  * theme palettes are mirrored here. `visuals` is recomputed once per frame by
@@ -238,6 +238,54 @@ function RankingStack({ index }: { index: number }) {
   );
 }
 
+/** Domus: a floor plan whose rooms rise wall by wall as the renovation lands. */
+function FloorPlan({ index }: { index: number }) {
+  // A small apartment footprint on the ground plane: [x, z, width, depth].
+  const ROOMS = useMemo(
+    () =>
+      [
+        [-1.1, -0.6, 1.2, 1.0],
+        [0.45, -0.7, 1.5, 0.8],
+        [-1.2, 0.7, 0.9, 1.3],
+        [0.2, 0.65, 1.1, 1.1],
+        [1.4, 0.35, 0.7, 1.5],
+      ] as const,
+    [],
+  );
+  const refs = useRef<Array<THREE.Mesh | null>>([]);
+  const material = useSyncedMaterial();
+
+  useFrame((state) => {
+    if (visuals.activeForm !== index) return;
+    const t = state.clock.elapsedTime;
+    // A build wave sweeps across the plan, raising each room's walls in turn.
+    const sweep = (t * 0.9) % (ROOMS.length + 1.5);
+    refs.current.forEach((room, i) => {
+      if (!room) return;
+      const rise = Math.min(1, Math.max(0, 1 - Math.abs(sweep - i)));
+      room.scale.y = 0.18 + (0.35 + rise * 0.65) * 0.9;
+    });
+  });
+
+  return (
+    // Tilted back so the plan reads as a floor seen at an angle.
+    <group rotation={[-0.95, 0.3, 0]}>
+      {ROOMS.map(([x, z, w, d], i) => (
+        <mesh
+          key={i}
+          material={material}
+          position={[x, 0, z]}
+          ref={(el) => {
+            refs.current[i] = el;
+          }}
+        >
+          <boxGeometry args={[w, 1, d]} />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
 /** MCP pipeline: a queue of nodes with a pulse travelling down the line. */
 function NodeQueue({ index }: { index: number }) {
   const NODES = 6;
@@ -388,6 +436,7 @@ const FORMS = [
   WaveformRing, // Hermes
   ShelfForm, // Shelf
   RankingStack, // Vybe
+  FloorPlan, // Domus
   NodeQueue, // Notion / MCP pipeline
   BridgedClusters, // Hybrid network
   TimetableLattice, // Ski & theatre scheduling
