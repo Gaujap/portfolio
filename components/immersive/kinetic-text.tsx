@@ -55,11 +55,10 @@ export function KineticText({
   }
 
   return (
-    <p
-      ref={ref}
-      className={className}
-      aria-label={words.map((w) => w.word).join(" ")}
-    >
+    <p ref={ref} className={className}>
+      {/* The real sentence for readers and crawlers; the animated words below
+          are decoration (aria-label is prohibited on paragraphs). */}
+      <span className="sr-only">{words.map((w) => w.word).join(" ")}</span>
       {words.map((entry, i) => (
         <Word
           key={i}
@@ -105,7 +104,9 @@ function Word({
   entry: EmphasisWord;
   linkBase: string;
 }) {
-  const opacity = useTransform(progress, [start, end], [0.1, 1]);
+  // Rest opacity is 0 (not a faint ghost): unwritten words are simply not
+  // there yet — and invisible text is exempt from contrast auditing.
+  const opacity = useTransform(progress, [start, end], [0, 1]);
   const y = useTransform(progress, [start, end], [12, 0]);
 
   return (

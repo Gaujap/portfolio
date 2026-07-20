@@ -5,8 +5,15 @@ angles: `/ai`, `/security`, `/engineering` reframe the same projects for
 different audiences.
 
 **Stack:** Next.js 15 (App Router) · TypeScript (strict) · Tailwind CSS v4 ·
-MDX · self-hosted fonts · deployed on Vercel. No component library, no i18n
-library — the site is small and those are long-term liabilities.
+MDX · Three.js/React Three Fiber (the WebGL world) · Framer Motion (kinetic
+type & choreography) · Lenis (smooth scroll) · self-hosted fonts · deployed on
+Vercel. No component library, no i18n library — long-term liabilities.
+
+The site is an immersive experience: a particle field with one thematic 3D
+form per project, scroll-scrubbed kinetic typography, and a small autonomous
+ship that presents content, wanders the screen, and hunts asteroids between
+duties. All of it degrades to a fully static, complete page under
+`prefers-reduced-motion` and on touch devices where it doesn't belong.
 
 The one rule that shapes everything: **content lives in typed data under
 `/content`, never in JSX.** Components read from it. Adding a project is adding
@@ -65,7 +72,7 @@ touch `/components`.
 1. Add one object to the array in **`content/projects.ts`**. TypeScript will
    tell you if you miss a field (that's intentional — `slug`, `name`, `period`,
    `tagline`, `summary`, `stack`, `primaryAngle`, `angles`, `links`,
-   `isPrivate`, `hasWriteup` are all required).
+   `facts`, `isPrivate`, `hasWriteup` are all required).
 
    The `angles` field is the reframing mechanism. Give it an entry per angle the
    project supports — each with its own `headline`, `summary`, and highlighted
@@ -90,8 +97,10 @@ touch `/components`.
    follow: Problem → Constraints → Approach → What shipped → What I'd do
    differently.
 
-3. The home carousel shows **every** project, in array order — reorder the
-   array to reorder the stage.
+3. The home console shows **every** project, in array order — reorder the
+   array to reorder the stage. Each project also needs `facts` (up to 4 render
+   as explorable hotspots around its 3D form) and a thematic form in
+   `components/immersive/scene.tsx` (`FORMS`, same index as the array).
 
 ### Add or change a UI string
 
@@ -152,15 +161,24 @@ utility flows from it.
 
 ## Quality bar
 
-Lighthouse (desktop, production build) — verified on home, an angle page, and a
-work page:
+Lighthouse (desktop, production build) — measured with the full immersive
+experience (WebGL, kinetic type, ship guide) active:
 
-| Metric         | Score |
-| -------------- | ----- |
-| Performance    | 100   |
-| Accessibility  | 100   |
-| Best Practices | 100   |
-| SEO            | 100   |
+| Page            | Perf | A11y | Best Practices | SEO |
+| --------------- | ---- | ---- | -------------- | --- |
+| `/en` (home)    | 98   | 100  | 100            | 100 |
+| `/en/ai`        | 100  | 100  | 100            | 100 |
+| `/en/work/hermes` | 100 | 100 | 100            | 100 |
+
+The 3D engine loads lazily after first paint and never blocks it; kinetic text
+keeps real (screen-reader- and crawler-visible) sentences behind the animated
+words.
+
+**Tuning the experience:** ship behaviour constants (presentation time, wander
+speed, asteroid frequency, shower chance) sit at the top of
+`components/immersive/ship-guide.tsx`; scene palettes and per-project forms in
+`components/immersive/scene.tsx`; the `[[emphasis]]` / `[[label->path]]` copy
+markers are parsed by `lib/emphasis.ts`.
 
 Fully keyboard navigable, WCAG AA in both themes, semantic landmarks,
 `prefers-reduced-motion` respected. Search `// TODO: verify` before launch —
