@@ -8,7 +8,7 @@ I wanted an assistant that is genuinely mine. Most cloud assistants send every u
 
 <Lead>A 14B model on a consumer AMD GPU, a strict end-to-end latency budget, and services that must survive reboots unattended.</Lead>
 
-- **Consumer hardware, not datacenter.** The model runs on an AMD **RX 7900 XTX** via **ROCm**, which is noticeably less mature than the CUDA ecosystem — driver quirks, fewer prebuilt wheels, and more manual tuning to get **Qwen 2.5 14B** stable at ~63 tok/s. {/* TODO: verify */}
+- **Consumer hardware, not datacenter.** The model runs on an AMD **RX 7900 XTX** via **ROCm**, which is noticeably less mature than the CUDA ecosystem — driver quirks, fewer prebuilt wheels, and more manual tuning to get **Qwen 2.5 14B** stable at ~63 tok/s.
 - **Latency budget.** A hands-free loop only feels usable if wake-word, transcription, inference, and speech synthesis stay under a tight combined budget, so every stage had to be fast on its own.
 - **Unattended operation.** This isn't a script I babysit — it has to survive reboots and run as background services with no terminal open.
 
