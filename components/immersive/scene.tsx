@@ -9,9 +9,10 @@ import { scrollState } from "@/lib/scroll-state";
  * The immersive backdrop: a drifting particle field and a thematic wireframe
  * form per project — a waveform ring for the voice assistant, a shelf of media
  * spines for the tracker, a ranking stack for the creator platform, a floor
- * plan for the renovation manager, a node queue for the agent pipeline, two
- * bridged clusters for the network, a timetable lattice for the scheduler. The
- * camera dollies with scroll and leans toward the pointer.
+ * plan for the renovation manager, a LiDAR room scan for the surveying app, a
+ * node queue for the agent pipeline, two bridged clusters for the network, a
+ * timetable lattice for the scheduler. The camera dollies with scroll and
+ * leans toward the pointer.
  *
  * WebGL can't read CSS custom properties (and three can't parse oklch), so the
  * theme palettes are mirrored here. `visuals` is recomputed once per frame by
@@ -286,6 +287,74 @@ function FloorPlan({ index }: { index: number }) {
   );
 }
 
+/** Cotae: a LiDAR room scan — points on the room shell lighting as the sweep passes. */
+function RoomScan({ index }: { index: number }) {
+  const W = 2.4;
+  const H = 1.8;
+  const D = 2.0;
+  const mesh = useRef<THREE.InstancedMesh>(null);
+  const material = useSyncedMaterial();
+  const proxy = useMemo(() => new THREE.Object3D(), []);
+
+  // Deterministic points spread across the six faces of the room shell — the
+  // captured surfaces of a scanned room.
+  const points = useMemo(() => {
+    const pts: Array<[number, number, number]> = [];
+    const GX = 6;
+    const GY = 5;
+    const GZ = 5;
+    const at = (i: number, n: number, span: number) => (i / (n - 1) - 0.5) * span;
+    for (let i = 0; i < GX; i++) {
+      for (let k = 0; k < GZ; k++) {
+        pts.push([at(i, GX, W), -H / 2, at(k, GZ, D)]); // floor
+        pts.push([at(i, GX, W), H / 2, at(k, GZ, D)]); // ceiling
+      }
+    }
+    for (let i = 0; i < GX; i++) {
+      for (let j = 0; j < GY; j++) {
+        pts.push([at(i, GX, W), at(j, GY, H), -D / 2]); // front / back walls
+        pts.push([at(i, GX, W), at(j, GY, H), D / 2]);
+      }
+    }
+    for (let k = 0; k < GZ; k++) {
+      for (let j = 0; j < GY; j++) {
+        pts.push([-W / 2, at(j, GY, H), at(k, GZ, D)]); // side walls
+        pts.push([W / 2, at(j, GY, H), at(k, GZ, D)]);
+      }
+    }
+    return pts;
+  }, []);
+
+  useFrame((state) => {
+    const instanced = mesh.current;
+    if (!instanced || visuals.activeForm !== index) return;
+    const t = state.clock.elapsedTime;
+    // A horizontal scan plane sweeps up and down the room; points near it pop.
+    const scanY = Math.sin(t * 0.8) * (H / 2);
+    for (let i = 0; i < points.length; i++) {
+      const [x, y, z] = points[i];
+      const near = Math.max(0, 1 - Math.abs(y - scanY) * 2.4);
+      proxy.position.set(x, y, z);
+      proxy.scale.setScalar(0.03 + near * 0.09);
+      proxy.updateMatrix();
+      instanced.setMatrixAt(i, proxy.matrix);
+    }
+    instanced.instanceMatrix.needsUpdate = true;
+  });
+
+  return (
+    <group rotation={[0.12, 0.5, 0]}>
+      <instancedMesh
+        ref={mesh}
+        args={[undefined, undefined, points.length] as unknown as [THREE.BufferGeometry, THREE.Material, number]}
+        material={material}
+      >
+        <boxGeometry args={[1, 1, 1]} />
+      </instancedMesh>
+    </group>
+  );
+}
+
 /** MCP pipeline: a queue of nodes with a pulse travelling down the line. */
 function NodeQueue({ index }: { index: number }) {
   const NODES = 6;
@@ -437,6 +506,7 @@ const FORMS = [
   ShelfForm, // Shelf
   RankingStack, // Vybe
   FloorPlan, // Domus
+  RoomScan, // Cotae
   NodeQueue, // Notion / MCP pipeline
   BridgedClusters, // Hybrid network
   TimetableLattice, // Ski & theatre scheduling

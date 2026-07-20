@@ -1,0 +1,31 @@
+## Le problème
+
+<Lead>Les apps de relevé de plans existantes sont bridées là où la rénovation en a le plus besoin — hauteurs de murs, édition libre, et l'isolation qui décide de la surface réelle d'une pièce.</Lead>
+
+Des outils comme MagicPlan sont limités exactement là où un relevé de rénovation demande de la précision : un nombre de projets plafonné, des hauteurs de murs imprécises, une édition manuelle contrainte et — surtout — aucune notion d'**isolation**, alors que c'est elle qui détermine la surface réelle d'une pièce *après* travaux. Il me fallait un outil de relevé produisant des surfaces post-travaux exactes et fiables, qui alimente directement le modèle de coûts Domus plutôt qu'un silo séparé.
+
+## Contraintes
+
+<Lead>Un outil de terrain qui doit rester exact sur site, dialoguer avec du vrai matériel, et déposer ses données dans le même schéma que le calculateur Domus.</Lead>
+
+- **L'exactitude sur de vrais chantiers.** Les surfaces pilotent en aval de vraies estimations de coût et de rentabilité, donc un scan approximatif ne suffit pas — chaque hauteur de mur et chaque surface doit être juste.
+- **Dialoguer avec le matériel que j'utilise déjà.** Un télémètre laser de précision est la vérité terrain des mesures, donc l'app doit le lire directement au lieu de me faire ressaisir les chiffres.
+- **Un seul modèle de données avec l'app web.** Cotae n'est pas un jouet autonome — sa sortie doit atterrir dans le même schéma Supabase / PostgreSQL que le calculateur Domus lit déjà.
+
+## Approche
+
+<Lead>Scanner au LiDAR, affiner au laser, remodéliser librement — puis offsetter l'isolation face par face pour la surface réelle, le tout sur un schéma partagé.</Lead>
+
+Cotae combine le **scan LiDAR** de l'iPad, un télémètre laser de précision et un éditeur de plans sur mesure. Un scan **RoomPlan / ARKit** du logement en l'état est converti en un modèle géométrique *propre et éditable* — polygones libres, hauteurs par mur, plafonds en pente — plutôt qu'un maillage verrouillé. Les mesures s'affinent au laser : j'ai **rétro-conçu le protocole Bluetooth** du Bosch **UniversalDistance 40C** (cartographie du service GATT et décodage des trames BLE) pour qu'une mesure tombe directement dans l'app. À partir du scan, on remodélise librement — casser des cloisons, réagencer, ajuster les hauteurs — et **l'isolation se pose face par face**, offsettée géométriquement le long des arêtes de polygones pour donner la surface brute et la surface réelle post-travaux. Tout écrit dans un **schéma Supabase / PostgreSQL unique partagé avec le calculateur Next.js Domus**, et exporte des données structurées plus des plans cotés PDF / JPG pour le client.
+
+## Ce qui a été livré
+
+<Lead>Une app iPad qui scanne sur place, affine au laser, remodélise en surfaces exactes, et pousse des pièces structurées directement dans Domus.</Lead>
+
+Une app de relevé iPad qui fonctionne : capture LiDAR d'un logement en l'état, affinage au laser via un Bluetooth rétro-conçu, remodélisation libre avec hauteurs par mur et plafonds en pente, et isolation face par face avec surfaces brute et post-isolation. Sa sortie alimente le modèle de coûts Domus sur un schéma de base partagé, et elle exporte des plans cotés (PDF / JPG) à partager avec les clients.
+
+## Ce que je ferais différemment
+
+<Lead>La géométrie éditable aurait dû être le modèle canonique dès le départ, le scan n'étant qu'un importeur parmi d'autres qui l'alimente.</Lead>
+
+La géométrie éditable est née du format de scan RoomPlan, ce qui a fait discrètement du scan la source de vérité. J'inverserais cela : définir d'abord le modèle éditable canonique et traiter **RoomPlan comme un importeur parmi d'autres** (laser seul, entièrement manuel), pour que l'app ne dépende d'aucun chemin de capture unique. Je durcirais aussi la couche Bluetooth — un protocole rétro-conçu est fragile aux mises à jour firmware, donc un petit **harnais de capture-rejeu** pour re-dériver rapidement les formats de trames éviterait la prochaine série de devinettes.

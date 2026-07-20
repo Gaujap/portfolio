@@ -379,6 +379,95 @@ export const projects: Project[] = [
     hasWriteup: true,
   },
   {
+    slug: "cotae",
+    name: "Cotae",
+    period: { en: "2026 — present", fr: "2026 — présent" }, // TODO: verify
+    role: {
+      en: "Solo — product, architecture, iPad app & backend integration",
+      fr: "Solo — produit, architecture, app iPad & intégration backend",
+    },
+    tagline: {
+      en: "An iPad LiDAR surveying tool that feeds exact rooms into Domus.",
+      fr: "Un outil de relevé LiDAR sur iPad qui alimente Domus en pièces exactes.",
+    },
+    summary: {
+      en: "An iPad app that scans a home with LiDAR, refines each measurement with a laser rangefinder, then lets you remodel freely — breaking walls, rearranging, adjusting per-wall heights, posing insulation face by face — to get exact post-renovation surfaces. It shares one Supabase / PostgreSQL schema with the Domus web calculator and exports dimensioned plans.",
+      fr: "Une app iPad qui scanne un logement au LiDAR, affine chaque mesure au télémètre laser, puis laisse remodéliser librement — casser des cloisons, réagencer, ajuster les hauteurs mur par mur, poser l'isolation face par face — pour obtenir des surfaces post-travaux exactes. Elle partage un seul schéma Supabase / PostgreSQL avec le calculateur web Domus et exporte des plans cotés.",
+    },
+    stack: [
+      "Swift",
+      "SwiftUI",
+      "RoomPlan",
+      "ARKit",
+      "CoreBluetooth",
+      "Supabase",
+      "PostgreSQL",
+      "Next.js",
+      "Prisma",
+    ],
+    facts: [
+      {
+        label: { en: "LiDAR to editable", fr: "Du LiDAR à l'éditable" },
+        detail: {
+          en: "RoomPlan / ARKit scans become a clean, editable geometry — free polygons, per-wall heights, sloped ceilings.",
+          fr: "Les scans RoomPlan / ARKit deviennent une géométrie propre et éditable — polygones libres, hauteurs par mur, plafonds en pente.",
+        },
+      },
+      {
+        label: {
+          en: "Reverse-engineered the laser",
+          fr: "Télémètre rétro-conçu",
+        },
+        detail: {
+          en: "Reverse-engineered the Bosch UniversalDistance 40C BLE protocol — GATT service, frame decoding — to read measurements straight from the device.",
+          fr: "Rétro-ingénierie du protocole BLE du Bosch UniversalDistance 40C — service GATT, décodage de trames — pour lire les mesures directement depuis l'appareil.",
+        },
+      },
+      {
+        label: { en: "Insulation-aware surfaces", fr: "Surfaces avec isolation" },
+        detail: {
+          en: "Insulation is posed face by face and offset geometrically, yielding both raw and real post-works surface areas.",
+          fr: "L'isolation se pose face par face et s'offsette géométriquement, donnant les surfaces brute et réelle post-travaux.",
+        },
+      },
+      {
+        label: { en: "One schema with Domus", fr: "Un schéma avec Domus" },
+        detail: {
+          en: "Shares a single Supabase / PostgreSQL schema with the Domus web calculator, and exports dimensioned PDF/JPG plans.",
+          fr: "Partage un seul schéma Supabase / PostgreSQL avec le calculateur web Domus, et exporte des plans cotés PDF/JPG.",
+        },
+      },
+    ],
+    primaryAngle: "engineering",
+    angles: {
+      engineering: {
+        headline: {
+          en: "LiDAR scans turned into exact, editable geometry",
+          fr: "Des scans LiDAR transformés en géométrie exacte et éditable",
+        },
+        summary: {
+          en: "RoomPlan / ARKit scans become a clean editable model — free polygons, per-wall heights, sloped ceilings — with insulation offset geometrically for real post-works surfaces, all over a single Supabase / PostgreSQL schema shared with the Domus web calculator.",
+          fr: "Les scans RoomPlan / ARKit deviennent un modèle éditable propre — polygones libres, hauteurs par mur, plafonds en pente — avec une isolation offsettée géométriquement pour des surfaces réelles post-travaux, le tout sur un schéma Supabase / PostgreSQL unique partagé avec le calculateur web Domus.",
+        },
+        stack: ["Swift", "RoomPlan", "ARKit", "Prisma"],
+      },
+      security: {
+        headline: {
+          en: "Reverse-engineering a laser rangefinder's Bluetooth protocol",
+          fr: "Rétro-ingénierie du protocole Bluetooth d'un télémètre laser",
+        },
+        summary: {
+          en: "Reverse-engineered the Bosch UniversalDistance 40C BLE protocol — mapping the GATT service and decoding the BLE frames — to pull laser measurements straight into the app instead of retyping them by hand.",
+          fr: "Rétro-ingénierie du protocole BLE du Bosch UniversalDistance 40C — cartographie du service GATT et décodage des trames BLE — pour faire remonter les mesures laser directement dans l'app au lieu de les ressaisir à la main.",
+        },
+        stack: ["CoreBluetooth", "BLE / GATT", "protocol reverse-engineering"],
+      },
+    },
+    links: [],
+    isPrivate: true,
+    hasWriteup: true,
+  },
+  {
     slug: "notion-mcp-pipeline",
     name: "Notion / MCP pipeline",
     period: { en: "2025 — present", fr: "2025 — présent" }, // TODO: verify
