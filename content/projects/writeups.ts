@@ -15,6 +15,8 @@ const writeups: Record<string, () => Promise<{ default: ComponentType }>> = {
   "vybe.fr": () => import("./vybe.fr.mdx"),
   "domus.en": () => import("./domus.en.mdx"),
   "domus.fr": () => import("./domus.fr.mdx"),
+  "cotae.en": () => import("./cotae.en.mdx"),
+  "cotae.fr": () => import("./cotae.fr.mdx"),
   "notion-mcp-pipeline.en": () => import("./notion-mcp-pipeline.en.mdx"),
   "notion-mcp-pipeline.fr": () => import("./notion-mcp-pipeline.fr.mdx"),
   "hybrid-network.en": () => import("./hybrid-network.en.mdx"),
